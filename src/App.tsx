@@ -51,43 +51,38 @@ export default function App() {
     <div className="wrap">
       <div className="card">
         <h1 style={{marginTop:0}}>LavenderDragonDesign Upscaler</h1>
-        <p className="muted">Frontend hosted on Netlify · Models loaded from Hugging Face</p>
+        <p className="muted">Frontend on Netlify · Models on Hugging Face</p>
 
-        <div className="stack">
-          <div>
-            <div className="muted">Choose a preset:</div>
-            <div className="row">
-              {(Object.keys(PRESETS) as PresetKey[]).map(k => (
-                <div key={k} className={`tile ${preset===k?'active':''}`} onClick={() => setPreset(k)} title={PRESETS[k].hint}>
-                  <div style={{fontWeight:600}}>{PRESETS[k].label}</div>
-                  <div className="muted" style={{fontSize:12}}>{PRESETS[k].path}</div>
-                </div>
-              ))}
+        <div className="row">
+          {(Object.keys(PRESETS) as PresetKey[]).map(k => (
+            <div key={k} className={`tile ${preset===k?'active':''}`} onClick={() => setPreset(k)} title={PRESETS[k].hint}>
+              <div style={{fontWeight:600}}>{PRESETS[k].label}</div>
+              <div className="muted" style={{fontSize:12}}>{PRESETS[k].path}</div>
             </div>
-          </div>
+          ))}
+        </div>
 
-          <div>
-            <input type="file" multiple accept="image/*" onChange={onFiles} />
-          </div>
+        <div style={{marginTop:16}}>
+          <input type="file" multiple accept="image/*" onChange={onFiles} />
+        </div>
 
-          <div>
-            <button className="btn" disabled={!files.some(f=>f.status==='queued')} onClick={start}>Start Upscale</button>
-          </div>
+        <div style={{marginTop:16}}>
+          <button className="btn" disabled={!files.some(f=>f.status==='queued')} onClick={start}>Start Upscale</button>
+        </div>
 
-          <div className="card" style={{background:'#0c132a'}}>
-            <h3 style={{marginTop:0}}>Queue</h3>
-            {files.length===0 && <div className="muted">Drop or choose images to begin.</div>}
-            {files.map(j => (
-              <div key={j.id} className="row" style={{alignItems:'center', justifyContent:'space-between'}}>
-                <div>{j.name}</div>
-                <div className="muted">{j.status}</div>
-                <div>
-                  {j.url && <a className="btn" href={j.url} download={`upscaled-${j.name}`}>Download</a>}
-                  {j.err && <span style={{color:'#fca5a5'}}> {j.err}</span>}
-                </div>
+        <div className="queue" style={{marginTop:16}}>
+          <h3 style={{marginTop:0}}>Queue</h3>
+          {files.length===0 && <div className="muted">Drop or choose images to begin.</div>}
+          {files.map(j => (
+            <div key={j.id} className="row" style={{alignItems:'center', justifyContent:'space-between'}}>
+              <div>{j.name}</div>
+              <div className="muted">{j.status}</div>
+              <div>
+                {j.url && <a className="btn" href={j.url} download={`upscaled-${j.name}`}>Download</a>}
+                {j.err && <span style={{color:'#fca5a5'}}> {j.err}</span>}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
 
         <div className="footer">© LavenderDragonDesign</div>

@@ -1,9 +1,13 @@
-# LavenderDragonDesign Upscaler — Frontend Only
+# LavenderDragonDesign Upscaler — Netlify Deploy (Frontend Only)
 
-**React + Vite** app. Models are hosted on **Hugging Face** and loaded at runtime via TFJS.
+React + Vite + TypeScript app. Models are hosted on **Hugging Face** and loaded at runtime via **TFJS**.
 
-- Configure presets in `src/lib/modelCatalog.ts` (they point to Space CDN `model.json`)
-- Netlify SPA config included via `netlify.toml`
+## Configure presets
+Edit `src/lib/modelCatalog.ts` and set the right-hand paths to your folders on Hugging Face.
+They resolve to:
+```
+https://huggingface.co/spaces/akessleretsy/1/resolve/main/models/<folder>/model.json
+```
 
 ## Dev
 ```
@@ -14,19 +18,14 @@ npm run dev
 ## Build
 ```
 npm run build
+npm run preview
 ```
 
-## Deploy (Netlify from GitHub)
+## Deploy to Netlify
 - Build command: `npm run build`
 - Publish directory: `dist`
-- Custom domain: `upscale.lddtools.lol` (CNAME → Netlify site)
+- `netlify.toml` already includes SPA redirect.
+- Optional: set Environment variable `NODE_VERSION = 20`.
 
-## Model URL pattern (Hugging Face Space CDN)
-```
-https://huggingface.co/spaces/akessleretsy/1/resolve/main/models/<folder>/model.json
-```
-Example:
-```
-.../models/realesrgan/general_plus-256/model.json
-.../models/realcugan/2x-denoise2x-128/model.json
-```
+## Custom domain (recommended)
+Point `upscale.lddtools.lol` (CNAME) to your Netlify site.

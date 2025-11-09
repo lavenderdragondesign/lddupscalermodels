@@ -7,7 +7,7 @@
     <meta name="color-scheme" content="light dark" />
     <style>
       :root { --bg:#0b1020; --fg:#e8e8ee; --card:#121935; --accent:#8b5cf6; }
-      body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji"; background: linear-gradient(120deg, #0b1020, #161d3b); color:var(--fg); }
+      body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial; background: linear-gradient(120deg, #0b1020, #161d3b); color:var(--fg); }
       .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
       .card { background: var(--card); border:1px solid #1f2753; border-radius: 16px; padding: 20px; box-shadow: 0 10px 20px rgba(0,0,0,.2); }
       .btn { background: var(--accent); border:0; color:white; padding:10px 14px; border-radius: 10px; cursor:pointer; }
@@ -15,12 +15,10 @@
       .row { display:flex; gap:16px; flex-wrap:wrap; }
       .tile { background:#0f1630; border:1px solid #212a57; padding:12px; border-radius:12px; cursor:pointer; }
       .tile.active { outline:2px solid var(--accent); }
-      .hovercard { position: absolute; background:white; color:#222; border-radius: 12px; padding:10px 12px; box-shadow: 0 12px 24px rgba(0,0,0,.25); border:1px solid rgba(0,0,0,.1); transform: translateY(8px); font-size: 12px; max-width: 260px; }
       .muted { color:#9aa3c1; font-size: 13px; }
-      .footer { opacity:.7; font-size: 12px; padding: 12px 0; }
       input[type=file] { background:#0f1630; border:1px dashed #34417e; padding: 16px; border-radius: 12px; width:100%; color:#9aa3c1; }
-      img.preview { max-width: 100%; border-radius: 12px; }
-      .stack { display:flex; flex-direction:column; gap:16px; }
+      .queue { background:#0c132a; border-radius:12px; padding:12px; border:1px solid #1a244e; }
+      .footer { opacity:.7; font-size: 12px; padding: 12px 0; }
     </style>
   </head>
   <body>

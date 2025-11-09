@@ -8,8 +8,7 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "allowSyntheticDefaultImports": true,
-    "types": []
+    "allowSyntheticDefaultImports": true
   },
   "include": ["src"]
 }
