@@ -15,7 +15,7 @@ export default function SettingsDialog({
         </div>
         <div className="row" style={{marginTop:14}}>
           {(Object.keys(PRESETS) as PresetKey[]).map(k => (
-            <div key={k} className={`tile ${value===k?'active':''}`} onClick={()=>onChange(k)} title={PRESETS[k].hint}>
+            <div key={k} className={`tile ${value===k?'active':''}`} onClick={()=>onChange(k)} title={PRESETS[k].hint || PRESETS[k].label}>
               <div style={{display:'flex', alignItems:'center', gap:8}}>
                 <Info size={14}/> <b>{PRESETS[k].label}</b>
               </div>

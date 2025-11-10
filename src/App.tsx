@@ -3,6 +3,9 @@ import { PRESETS, PresetKey, tfjsUrl } from './lib/modelCatalog'
 import Splash from './components/Splash'
 import SettingsDialog from './components/SettingsDialog'
 import { Cog, Download } from 'lucide-react'
+import BeforeAfterSlider from './components/BeforeAfterSlider'
+import ThumbStrip from './components/ThumbStrip'
+import LogoSpinner from './components/LogoSpinner'
 
 type Job = { id: string; file: File; name: string; status: 'queued'|'processing'|'done'|'error'; url?: string; err?: string }
 
@@ -29,6 +32,9 @@ export default function App() {
   const [busy, setBusy] = useState(false)
   const [showSplash, setShowSplash] = useState(true)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [currentId, setCurrentId] = useState<string | undefined>(undefined)
+  const [processing, setProcessing] = useState(false)
+  const [progress, setProgress] = useState(0)
 
   const worker = useMemo(() => new Worker(new URL('./workers/tfupscale.worker.ts', import.meta.url), { type:'module' }), [])
 
@@ -122,7 +128,36 @@ export default function App() {
             ))}
           </div>
 
-          <div className="footer">© LavenderDragonDesign</div>
+          
+      <div className="card" style={{padding:14}}>
+        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10}}>
+          {jobs.length>0 && (<><b>Live Preview</b>
+          {processing && <LogoSpinner src="https://i.postimg.cc/y6M6KPZ5/logo.jpg" size={48} progress={progress}/>}
+        </div>
+        <BeforeAfterSlider beforeUrl={current?.originalUrl} afterUrl={current?.url} height={380} />
+      </div></>) }
+
+      {jobs.length>0 && (<div className="card" style={{marginTop:12}}>
+        <ThumbStrip
+          items={jobs.map(j => ({ id: j.id, url: j.originalUrl || '', name: j.name }))}
+          current={current?.id}
+          onSelect={setCurrentId}
+        />
+      </div>
+
+      {jobs.length>0 && (<div className="card" style={{marginTop:12, padding:12, display:'flex', gap:10, alignItems:'center', justifyContent:'flex-end', flexWrap:'wrap'}}>
+        <div style={{marginRight:'auto', opacity:.8, fontSize:12}}>Actions</div>
+        <label className="btn">
+          <input type="file" accept="image/*" multiple style={{display:'none'}} onChange={e=>onFiles(e.target.files)}/>
+          Add Images
+        </label>
+        <button className="btn" onClick={()=>setSettingsOpen(true)} title="Settings"><Cog size={16}/> Settings</button>
+        <button className="btn" onClick={start} disabled={!current || processing}>Upscale</button>
+        <a className="btn" href={current?.url} download={current?.name?.replace(/\.[^.]+$/, '') + '_upscaled.png'} style={{opacity: current?.url ? 1 : .5, pointerEvents: current?.url ? 'auto':'none'}}><Download size={16}/> Download</a>
+      </div>
+
+
+      <div className="footer">© LavenderDragonDesign</div>
         </div>
       </div>
 
