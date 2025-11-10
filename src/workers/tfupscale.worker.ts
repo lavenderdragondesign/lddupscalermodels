@@ -54,6 +54,7 @@ function canvasToNHWC(canvas: OffscreenCanvas): tf.Tensor4D {
 }
 
 async function tensorToBlobNHWC01(t: tf.Tensor, mime = 'image/png'): Promise<Blob> {
+  try {
   const [h, w, c] = (t.shape as number[]).slice(-3)
   const cpu = (await t.data()) as Float32Array
   const canvas = new OffscreenCanvas(w, h)
@@ -86,7 +87,18 @@ self.onmessage = (async (e: any) => {
     post({ id, type: 'progress', value: 3 });
     try { await assertReachable(modelUrl) } catch(e) { return postErr('preflight', e) }
     let model;
+    let PATCH_W = 128, PATCH_H = 128;
     try { model = await tf.loadGraphModel(modelUrl) } catch(e) { return postErr('loadGraphModel', e) }
+    try {
+      const inShape = model.inputs?.[0]?.shape as number[] | undefined;
+      if (Array.isArray(inShape) && inShape.length >= 4) {
+        PATCH_H = (inShape[1] as number) || 128;
+        PATCH_W = (inShape[2] as number) || 128;
+      }
+    } catch {}
+    // safety: keep patches modest to prevent huge shaders
+    PATCH_W = Math.min(PATCH_W, 128);
+    PATCH_H = Math.min(PATCH_H, 128);
     ;(self as any).postMessage({ id, type: 'progress', value: 8 } as Msg)
 
     const inShape = model.inputs[0].shape as number[] // e.g., [1,128,128,3]

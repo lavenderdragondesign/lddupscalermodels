@@ -120,7 +120,7 @@ export default function App() {
                         {j.status === 'queued' && 'Queued'}
                         {j.status === 'processing' && `Processing ${progress}%`}
                         {j.status === 'done' && <a href={j.url} download className="link">Download</a>}
-                        {j.status === 'error' && <span style={{color:'#fca5a5'}}>Error</span>}
+                        {j.status === 'error' && <span style={{color:'#fca5a5'}} title={j.err || 'Error'}>Error</span>}
                       </div>
                     </div>
                     {j.status !== 'done' && <div style={{height:6, background:'rgba(255,255,255,.1)', borderRadius:6, overflow:'hidden', marginTop:6}}>
