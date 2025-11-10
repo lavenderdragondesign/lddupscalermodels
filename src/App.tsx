@@ -11,7 +11,7 @@ function Tile({ active, label, path, hint, onClick }:{ active:boolean, label:str
   return (
     <div className={`tile ${active?'active':''}`} onMouseEnter={()=>setShow(true)} onMouseLeave={()=>setShow(false)} onClick={onClick}>
       <div style={{fontWeight:700}}>{label}</div>
-      <div className="muted" style={{fontSize:12}}>{path}</div>
+      
       {show && (
         <div className="hovercard">
           <div className="title">{label}</div>

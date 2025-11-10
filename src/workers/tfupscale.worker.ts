@@ -61,20 +61,39 @@ function canvasToNHWC(canvas: OffscreenCanvas): tf.Tensor4D {
 }
 
 async function tensorToBlobNHWC01(t: tf.Tensor, mime = 'image/png'): Promise<Blob> {
-  const [h, w, c] = (t.shape as number[]).slice(-3)
-  const cpu = (await t.data()) as Float32Array
+  const t3 = t.squeeze() as tf.Tensor3D
+  const [h, w, c] = t3.shape
   const canvas = new OffscreenCanvas(w, h)
   const ctx = canvas.getContext('2d')!
   const img = ctx.createImageData(w, h)
+  const data = await t3.data() as Float32Array
   let di = 0
-  for (let i = 0; i < h * w; i++) {
-    img.data[di++] = Math.max(0, Math.min(255, Math.round(cpu[i * c + 0] * 255)))
-    img.data[di++] = Math.max(0, Math.min(255, Math.round(cpu[i * c + 1] * 255)))
-    img.data[di++] = Math.max(0, Math.min(255, Math.round(cpu[i * c + 2] * 255)))
-    img.data[di++] = 255
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * c
+      img.data[di++] = Math.max(0, Math.min(255, Math.round(data[i + 0] * 255)))
+      img.data[di++] = Math.max(0, Math.min(255, Math.round(data[i + 1] * 255)))
+      img.data[di++] = Math.max(0, Math.min(255, Math.round(data[i + 2] * 255)))
+      img.data[di++] = 255
+    }
   }
   ctx.putImageData(img, 0, 0)
-  return await new Promise(res => canvas.toBlob(b => res(b!), mime))
+
+  // Prefer OffscreenCanvas.convertToBlob if available, else toDataURL fallback
+  const anyCanvas: any = canvas as any
+  if (typeof anyCanvas.convertToBlob === 'function') {
+    return await anyCanvas.convertToBlob({ type: mime })
+  }
+  const backing = (ctx as any)?.canvas ?? anyCanvas
+  if (typeof backing.toDataURL !== 'function') {
+    throw new Error('No convertToBlob or toDataURL available on canvas')
+  }
+  const dataUrl: string = backing.toDataURL(mime)
+  const base64 = dataUrl.split(',')[1]
+  const bin = atob(base64)
+  const buf = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i)
+  return new Blob([buf], { type: mime })
 }
 
 self.onmessage = (async (e: MessageEvent<Job>) => {
