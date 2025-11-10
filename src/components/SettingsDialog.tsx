@@ -13,7 +13,7 @@ export default function SettingsDialog({
           <div style={{display:'flex', alignItems:'center', gap:8}}><Settings size={18}/> <b>Upscale Settings</b></div>
           <button className="btn" onClick={onClose} title="Close"><X size={16}/></button>
         </div>
-        <div className="muted" style={{marginTop:6}}>Simple presets with hover info. Models served from Hugging Face Space.</div>
+        <div className="muted" style={{marginTop:6}}>Choose a quality preset. On‑device, private processing.</div>
 
         <div className="row" style={{marginTop:14}}>
           {(Object.keys(PRESETS) as PresetKey[]).map(k => (
@@ -21,7 +21,7 @@ export default function SettingsDialog({
               <div style={{display:'flex', alignItems:'center', gap:8}}>
                 <Info size={14}/> <b>{PRESETS[k].label}</b>
               </div>
-              <div className="muted" style={{fontSize:12}}>{PRESETS[k].path}</div>
+              <div className="muted" style={{fontSize:12}}>Optimized configuration</div>
             </div>
           ))}
         </div>

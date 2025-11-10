@@ -14,7 +14,7 @@ export default function Splash({ onDone }: { onDone: () => void }) {
     <div className="splash-veil">
       <div className="splash-card">
         <div style={{fontSize:22, fontWeight:700, marginBottom:6}}>LavenderDragonDesign Tools</div>
-        <div style={{opacity:.8, marginBottom:14}}>Initializing Upscaler Engine…</div>
+        <div style={{opacity:.8, marginBottom:14}}>On‑device, private image upscaling…</div>
         <div className="bar" style={{'--prog': `${progress}%`} as React.CSSProperties}><span/></div>
         <div style={{opacity:.6, fontSize:12, marginTop:8}}>{progress}%</div>
       </div>
