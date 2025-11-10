@@ -12,8 +12,8 @@ export const tfjsUrl = (folder: string) => `${HF_BASE}/${folder}/model.json`;
 export const PRESETS = {
   auto: { label: 'Best Auto',   hint: 'Picks a good default for mixed images.', path: 'realesrgan/general_plus-128' },
 
-  g2x:  { label: '2x',  hint: 'Photos/logos. Fast & clean.',            path: 'realesrgan/general_fast-128' },
-  g4x:  { label: '2x',  hint: 'Larger export with more detail.',        path: 'realesrgan/general_plus-256' },
+  g2x:  { label: 'General 2×',  hint: 'Photos/logos. Fast & clean.',            path: 'realesrgan/general_fast-128' },
+  g4x:  { label: 'General 4×',  hint: 'Larger export with more detail.',        path: 'realesrgan/general_plus-256' },
 
   a2x:  { label: 'Anime 2×',    hint: 'Line-art & flat colors (denoise 2).',    path: 'realcugan/2x-denoise2x-128' },
   a4x:  { label: 'Anime 4×',    hint: 'Crisper big anime output.',              path: 'realcugan/2x-conservative-256' },

@@ -1,4 +1,3 @@
-
 import React from 'react'
 export default function LogoSpinner({ src, size=64, progress=0 }:{ src:string, size?:number, progress?:number }){
   const pct = Math.max(0, Math.min(100, progress))

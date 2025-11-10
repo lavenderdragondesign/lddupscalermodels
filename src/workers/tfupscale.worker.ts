@@ -2,8 +2,6 @@
 import * as tf from '@tensorflow/tfjs'
 import '@tensorflow/tfjs-backend-webgl'
 import '@tensorflow/tfjs-backend-wasm'
-
-import '@tensorflow/tfjs-backend-wasm'
 import { setWasmPaths } from '@tensorflow/tfjs-backend-wasm'
 
 // Configure WASM binaries (CDN) and helpful WebGL diagnostics
@@ -98,22 +96,12 @@ async function tensorToBlobNHWC01(t: tf.Tensor, mime = 'image/png'): Promise<Blo
   return new Blob([buf], { type: mime })
 }
 
-
-async function assertReachable(url: string) {
-  try {
-    const r = await fetch(url, { method: 'HEAD', mode: 'cors' })
-    if (!r.ok) throw new Error(`HTTP ${r.status} ${r.statusText}`)
-  } catch (e:any) {
-    throw new Error(`Model fetch failed for ${url} — ${e?.message || e}`)
-  }
-}
-self.onmessage = (async (e: any) => { const { id, file, modelUrl } = e.data || {}; const post=(m:any)=>(self as any).postMessage(m); const postErr=(stage:string,err:any)=>post({id,type:'error',error:String(err?.message||err),stack:String(err?.stack||''),stage}); try {
+self.onmessage = (async (e: MessageEvent<Job>) => {
   const { id, file, modelUrl } = e.data
   try {
     ;(self as any).postMessage({ id, type: 'progress', value: 3 } as Msg)
-    try { await tf.setBackend('wasm'); await tf.ready() } catch (e) { await tf.setBackend('wasm'); await tf.ready() }
-    post({id,type:'progress',value:3}); try{ await assertReachable(modelUrl) }catch(e){ return postErr('preflight',e) } let model;
-    let PATCH_W = 64, PATCH_H = 64; try{ model = await tf.loadGraphModel(modelUrl) }catch(e){ return postErr('loadGraphModel',e) }
+    try { await tf.setBackend('webgl'); await tf.ready() } catch (e) { await tf.setBackend('wasm'); await tf.ready() }
+    const model = await tf.loadGraphModel(modelUrl)
     ;(self as any).postMessage({ id, type: 'progress', value: 8 } as Msg)
 
     const inShape = model.inputs[0].shape as number[] // e.g., [1,128,128,3]
@@ -202,7 +190,4 @@ const url = URL.createObjectURL(finalBlob!)
   } catch (err: any) {
     ;(self as any).postMessage({ id, type: 'error', error: String(err?.message || err) } as Msg)
   }
-} catch(err:any){ postErr('worker-top', err) } });
-// safety cap
-PATCH_W = Math.min(PATCH_W, 64);
-PATCH_H = Math.min(PATCH_H, 64);
+})

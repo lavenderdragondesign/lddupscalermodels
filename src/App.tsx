@@ -11,6 +11,8 @@ type Job = { id: string; file: File; name: string; status: 'queued'|'processing'
 
 function Tile({ active, label, path, hint, onClick }:{ active:boolean, label:string, path:string, hint:string, onClick:()=>void }){
   const [show, setShow] = useState(false)
+  const current = (jobs as any)?.find?.((j:any)=>j.id===currentId)
+
   return (
     <div className={`tile ${active?'active':''}`} onMouseEnter={()=>setShow(true)} onMouseLeave={()=>setShow(false)} onClick={onClick}>
       <div style={{fontWeight:700}}>{label}</div>
@@ -75,6 +77,8 @@ export default function App() {
     setBusy(false)
   }
 
+  const current = (jobs as any)?.find?.((j:any)=>j.id===currentId)
+
   return (
     <>
       {showSplash && <Splash onDone={() => setShowSplash(false)} />}
@@ -128,34 +132,51 @@ export default function App() {
             ))}
           </div>
 
-          
-      <div className="card" style={{padding:14}}>
-        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10}}>
-          {jobs.length>0 && (<><b>Live Preview</b>
-          {processing && <LogoSpinner src="https://i.postimg.cc/y6M6KPZ5/logo.jpg" size={48} progress={progress}/>}
+          {jobs.length === 0 && (
+        <div className="card" style={{padding:22, textAlign:'center', marginTop:12}}>
+          <div style={{fontWeight:700, marginBottom:8}}>Drop images here to start</div>
+          <div style={{opacity:.8, fontSize:13, marginBottom:12}}>Preview and tools appear after you add images.</div>
+          <label className="btn">
+            <input type="file" accept="image/*" multiple style={{display:'none'}} onChange={e=>onFiles(e.target.files)}/>
+            Add Images
+          </label>
         </div>
-        <BeforeAfterSlider beforeUrl={current?.originalUrl} afterUrl={current?.url} height={380} />
-      </div></>) }
+      )}
 
-      {jobs.length>0 && (<div className="card" style={{marginTop:12}}>
-        <ThumbStrip
-          items={jobs.map(j => ({ id: j.id, url: j.originalUrl || '', name: j.name }))}
-          current={current?.id}
-          onSelect={setCurrentId}
-        />
-      </div>
+      {jobs.length > 0 && (
+        <>
+          <div className="card" style={{padding:14}}>
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10}}>
+              <b>Live Preview</b>
+              {processing && <LogoSpinner src="https://i.postimg.cc/y6M6KPZ5/logo.jpg" size={48} progress={progress}/>}
+            </div>
+            <BeforeAfterSlider beforeUrl={current?.originalUrl || (current?.file ? URL.createObjectURL(current.file) : undefined)} afterUrl={current?.url} height={380} />
+          </div>
 
-      {jobs.length>0 && (<div className="card" style={{marginTop:12, padding:12, display:'flex', gap:10, alignItems:'center', justifyContent:'flex-end', flexWrap:'wrap'}}>
-        <div style={{marginRight:'auto', opacity:.8, fontSize:12}}>Actions</div>
-        <label className="btn">
-          <input type="file" accept="image/*" multiple style={{display:'none'}} onChange={e=>onFiles(e.target.files)}/>
-          Add Images
-        </label>
-        <button className="btn" onClick={()=>setSettingsOpen(true)} title="Settings"><Cog size={16}/> Settings</button>
-        <button className="btn" onClick={start} disabled={!current || processing}>Upscale</button>
-        <a className="btn" href={current?.url} download={current?.name?.replace(/\.[^.]+$/, '') + '_upscaled.png'} style={{opacity: current?.url ? 1 : .5, pointerEvents: current?.url ? 'auto':'none'}}><Download size={16}/> Download</a>
-      </div>
+          <div className="card" style={{marginTop:12}}>
+            <ThumbStrip
+              items={(jobs||[]).map((j:any)=>({ id:j.id, url:j.originalUrl || (j.file ? URL.createObjectURL(j.file) : ''), name:j.name }))}
+              current={current?.id}
+              onSelect={setCurrentId}
+            />
+          </div>
 
+          <div className="card" style={{marginTop:12, padding:12, display:'flex', gap:10, alignItems:'center', justifyContent:'flex-end', flexWrap:'wrap'}}>
+            <div style={{marginRight:'auto', opacity:.8, fontSize:12}}>Actions</div>
+            <label className="btn">
+              <input type="file" accept="image/*" multiple style={{display:'none'}} onChange={e=>onFiles(e.target.files)}/>
+              Add Images
+            </label>
+            <button className="btn" onClick={()=>setSettingsOpen(true)} title="Settings"><Cog size={16}/> Settings</button>
+            <button className="btn" onClick={start} disabled={!current || processing}>Upscale</button>
+            <a className="btn" href={current?.url} download={current?.name?.replace(/\.[^.]+$/, '') + '_upscaled.png'} style={{opacity: current?.url ? 1 : .5, pointerEvents: current?.url ? 'auto':'none'}}><Download size={16}/> Download</a>
+          </div>
+        </>
+      )}
+
+      <div data-fixed-logo style={{position:'fixed',left:12,top:12,zIndex:60}}>
+  <img src="https://i.postimg.cc/y6M6KPZ5/logo.jpg" alt="logo" style={{width:28,height:28,borderRadius:'50%',boxShadow:'0 0 12px rgba(178,102,255,.8)'}}/>
+</div>
 
       <div className="footer">© LavenderDragonDesign</div>
         </div>
