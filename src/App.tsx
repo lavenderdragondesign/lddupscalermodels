@@ -11,7 +11,7 @@ type Job = { id: string; file: File; name: string; status: 'queued'|'processing'
 
 function Tile({ active, label, path, hint, onClick }:{ active:boolean, label:string, path:string, hint:string, onClick:()=>void }){
   const [show, setShow] = useState(false)
-  const current = (jobs as any)?.find?.((j:any)=>j.id===currentId)
+  const current = (jobs as any)?.find?.((j:any)=> j.id === currentId)
 
   return (
     <div className={`tile ${active?'active':''}`} onMouseEnter={()=>setShow(true)} onMouseLeave={()=>setShow(false)} onClick={onClick}>
@@ -34,7 +34,6 @@ export default function App() {
   const [busy, setBusy] = useState(false)
   const [showSplash, setShowSplash] = useState(true)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [currentId, setCurrentId] = useState<string | undefined>(undefined)
   const [processing, setProcessing] = useState(false)
   const [progress, setProgress] = useState(0)
 
@@ -77,7 +76,7 @@ export default function App() {
     setBusy(false)
   }
 
-  const current = (jobs as any)?.find?.((j:any)=>j.id===currentId)
+  const current = (jobs as any)?.find?.((j:any)=> j.id === currentId)
 
   return (
     <>
@@ -132,17 +131,29 @@ export default function App() {
             ))}
           </div>
 
-          {jobs.length === 0 && (
-        <div className="card" style={{padding:22, textAlign:'center', marginTop:12}}>
-          <div style={{fontWeight:700, marginBottom:8}}>Drop images here to start</div>
-          <div style={{opacity:.8, fontSize:13, marginBottom:12}}>Preview and tools appear after you add images.</div>
-          <label className="btn">
-            <input type="file" accept="image/*" multiple style={{display:'none'}} onChange={e=>onFiles(e.target.files)}/>
-            Add Images
-          </label>
+          
+      {/* Drag-and-drop zone + Empty state */}
+      {jobs.length === 0 && (
+        <div
+          onDragOver={(e)=>{e.preventDefault(); e.dataTransfer.dropEffect='copy'}}
+          onDrop={(e)=>{e.preventDefault(); const files = e.dataTransfer.files; if(files && files.length){ onFiles(files as any) }}}
+          style={{marginTop:12}}
+        >
+          <div style={{padding:22, textAlign:'center'}} className="card">
+            <div style={{fontWeight:700, marginBottom:8}}>Drop images here</div>
+            <div style={{opacity:.8, fontSize:13, marginBottom:12}}>Or click to browse</div>
+            <label className="btn">
+              <input type="file" accept="image/*" multiple style={{display:'none'}} onChange={e=>onFiles(e.target.files)}/>
+              Add Images
+            </label>
+            <div style={{marginTop:14, border:'2px dashed rgba(255,255,255,.25)', borderRadius:12, padding:'24px 16px', color:'rgba(255,255,255,.7)'}}>
+              Drag & drop files onto this area
+            </div>
+          </div>
         </div>
       )}
 
+      {/* Live Preview + Thumb strip + Actions */}
       {jobs.length > 0 && (
         <>
           <div className="card" style={{padding:14}}>
@@ -174,9 +185,6 @@ export default function App() {
         </>
       )}
 
-      <div data-fixed-logo style={{position:'fixed',left:12,top:12,zIndex:60}}>
-  <img src="https://i.postimg.cc/y6M6KPZ5/logo.jpg" alt="logo" style={{width:28,height:28,borderRadius:'50%',boxShadow:'0 0 12px rgba(178,102,255,.8)'}}/>
-</div>
 
       <div className="footer">© LavenderDragonDesign</div>
         </div>
