@@ -141,9 +141,33 @@ self.onmessage = (async (e: MessageEvent<Job>) => {
       }
     }
 
-    const finalBlob = await outCanvas.convertToBlob({ type: 'image/png' })
-    const url = URL.createObjectURL(finalBlob)
-    ;(self as any).postMessage({ id, type: 'done', blobUrl: url } as Msg)
+    let finalBlob: Blob | null = null
+try {
+  const anyCanvas: any = outCanvas as any
+  if (typeof anyCanvas.convertToBlob === 'function') {
+    finalBlob = await anyCanvas.convertToBlob({ type: 'image/png' })
+  } else {
+    // Fallback for environments without OffscreenCanvas.convertToBlob
+    const ctx = outCanvas.getContext('2d') as OffscreenCanvasRenderingContext2D
+    // Prefer the backing HTMLCanvasElement if available
+    const backing: any = (ctx as any)?.canvas ?? outCanvas
+    if (typeof backing.toDataURL !== 'function') {
+      throw new Error('No convertToBlob or toDataURL available on canvas')
+    }
+    const dataUrl: string = backing.toDataURL('image/png')
+    const base64 = dataUrl.split(',')[1]
+    const bin = atob(base64)
+    const buf = new Uint8Array(bin.length)
+    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i)
+    finalBlob = new Blob([buf], { type: 'image/png' })
+  }
+} catch (e) {
+  console.error('Blob creation failed:', e)
+  throw e
+}
+
+const url = URL.createObjectURL(finalBlob!)
+;(self as any).postMessage({ id, type: 'done', blobUrl: url } as Msg)
   } catch (err: any) {
     ;(self as any).postMessage({ id, type: 'error', error: String(err?.message || err) } as Msg)
   }
