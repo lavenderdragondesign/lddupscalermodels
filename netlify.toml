@@ -5,3 +5,7 @@
 
 [build.processing]
   skip_processing = true
+
+
+[build.environment]
+  NETLIFY_BUILD_DEBUG = "true"
