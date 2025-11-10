@@ -1,6 +1,23 @@
 // TFJS tiling worker to support fixed input shapes like [1,128,128,3]
 import * as tf from '@tensorflow/tfjs'
 import '@tensorflow/tfjs-backend-webgl'
+import '@tensorflow/tfjs-backend-wasm'
+import { setWasmPaths } from '@tensorflow/tfjs-backend-wasm'
+
+// Configure WASM binaries (CDN) and helpful WebGL diagnostics
+setWasmPaths('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-wasm@4.22.0/dist/')
+
+// Debug + stability knobs (will log shader sources & link errors)
+try {
+  tf.env().set('WEBGL_LOG_DEBUG', true);
+  tf.env().set('WEBGL_VALIDATE_SHADERS', true);
+  tf.env().set('WEBGL_FORCE_F16_TEXTURES', false);
+  tf.env().set('WEBGL_VERSION', 2);
+  tf.env().set('WEBGL_PACK', true);
+  tf.env().set('WEBGL_CPU_FORWARD', false);
+  tf.env().set('WEBGL_FLUSH_THRESHOLD', 1e6);
+  tf.env().set('WEBGL_CHECK_NUMERICS', false);
+} catch {}
 
 type Job = { id: string; file: File; modelUrl: string }
 type Msg =
@@ -64,7 +81,7 @@ self.onmessage = (async (e: MessageEvent<Job>) => {
   const { id, file, modelUrl } = e.data
   try {
     ;(self as any).postMessage({ id, type: 'progress', value: 3 } as Msg)
-    await tf.setBackend('webgl'); await tf.ready()
+    try { await tf.setBackend('webgl'); await tf.ready() } catch (e) { await tf.setBackend('wasm'); await tf.ready() }
     const model = await tf.loadGraphModel(modelUrl)
     ;(self as any).postMessage({ id, type: 'progress', value: 8 } as Msg)
 
