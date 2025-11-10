@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20 <21"
   },
   "dependencies": {
     "@tensorflow/tfjs": "^4.18.0",
