@@ -79,15 +79,7 @@ export default function App() {
         <img src="https://i.postimg.cc/y6M6KPZ5/logo.jpg" alt="logo" style={{width:28, height:28, borderRadius:'50%', boxShadow:'0 0 12px rgba(178,102,255,.8)'}}/>
         <b>LavenderDragonDesign Upscaler</b>
       </div>
-      <div style={{display:'flex', alignItems:'center', gap:8}}>
-        <label className="btn">
-          <input type="file" accept="image/*" multiple style={{display:'none'}} onChange={e=>onFiles(e.target.files)}/>
-          Add Images
-        </label>
-        <button className="btn" onClick={()=>setSettingsOpen(true)} title="Settings"><Cog size={16}/></button>
-        <button className="btn" onClick={start} disabled={!current || processing}>Upscale</button>
-        <a className="btn" href={current?.url} download={current?.name?.replace(/\.[^.]+$/, '') + '_upscaled.png'} style={{opacity: current?.url ? 1 : .5, pointerEvents: current?.url ? 'auto':'none'}}><Download size={16}/> Download</a>
-      </div>
+      <div style={{display:'flex', alignItems:'center', gap:8}}>      </div>
     </div>
   )
 
@@ -99,15 +91,15 @@ export default function App() {
         {Header}
 
         <div className="wrap" style={{maxWidth:1100, margin:'0 auto', padding:16}}>
-          <div className="card" style={{padding:14}}>
+          {jobs.length > 0 && (<div className="card" style={{padding:14}}>
             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10}}>
               <b>Live Preview</b>
               {processing && <LogoSpinner src="https://i.postimg.cc/y6M6KPZ5/logo.jpg" size={48} progress={progress}/>}
             </div>
             <BeforeAfterSlider beforeUrl={current?.originalUrl} afterUrl={current?.url} height={380} />
-          </div>
+          </div>) /* end preview card */
 
-          <div className="card" style={{marginTop:12}}>
+          {jobs.length > 0 && (<div className="card" style={{marginTop:12}}>
             <ThumbStrip
               items={jobs.map(j => ({ id: j.id, url: j.originalUrl || '', name: j.name }))}
               current={current?.id}

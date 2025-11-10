@@ -9,7 +9,7 @@ export default function BeforeAfterSlider({ beforeUrl, afterUrl, height=340 }:{ 
     return ()=>{ el.removeEventListener('mousemove',onMouse); el.removeEventListener('touchmove',onTouch as any) }
   },[])
   return <div ref={ref} style={{position:'relative',height,width:'100%',borderRadius:16,overflow:'hidden',background:'#111'}}>
-    {beforeUrl && <img src={beforeUrl} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain'}}/>}
+    {beforeUrl ? <img src={beforeUrl} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:'contain'}}/> : <div style={{position:'absolute',inset:0,display:'grid',placeItems:'center',color:'rgba(255,255,255,.6)'}}>Waiting for image…</div>}
     {afterUrl && <div style={{position:'absolute',inset:0,width:`${pos*100}%`,overflow:'hidden'}}>
       <img src={afterUrl} style={{width:'100%',height:'100%',objectFit:'contain'}}/></div>}
     <div style={{position:'absolute',top:0,bottom:0,left:`calc(${pos*100}% - 1px)`,width:2,background:'rgba(255,255,255,.8)'}}/>
