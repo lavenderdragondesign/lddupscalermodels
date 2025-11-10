@@ -1,147 +1,132 @@
-
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useMemo, useState } from 'react'
+import { PRESETS, PresetKey, tfjsUrl } from './lib/modelCatalog'
 import Splash from './components/Splash'
 import SettingsDialog from './components/SettingsDialog'
-import { PRESETS, PresetKey, tfjsUrl } from './lib/modelCatalog'
 import { Cog, Download } from 'lucide-react'
-import BeforeAfterSlider from './components/BeforeAfterSlider'
-import ThumbStrip from './components/ThumbStrip'
-import LogoSpinner from './components/LogoSpinner'
 
-type Job = {
-  id: string
-  file: File
-  name: string
-  status: 'queued' | 'processing' | 'done' | 'error'
-  url?: string
-  err?: string
-  originalUrl?: string
-}
+type Job = { id: string; file: File; name: string; status: 'queued'|'processing'|'done'|'error'; url?: string; err?: string }
 
-const makeId = () => Math.random().toString(36).slice(2)
-
-export default function App() {
-  const [showSplash, setShowSplash] = useState(true)
-  const [settingsOpen, setSettingsOpen] = useState(false)
-  const [preset, setPreset] = useState<PresetKey>('auto')
-  const [jobs, setJobs] = useState<Job[]>([])
-  const [currentId, setCurrentId] = useState<string | undefined>(undefined)
-  const [processing, setProcessing] = useState(false)
-  const [progress, setProgress] = useState(0)
-
-  // web worker
-  const workerRef = useRef<Worker | null>(null)
-  useEffect(() => {
-    const w = new Worker(new URL('./workers/tfupscale.worker.ts', import.meta.url), { type: 'module' })
-    workerRef.current = w
-    w.onmessage = (e: MessageEvent<any>) => {
-      const msg = e.data
-      if (!msg) return
-      if (msg.type === 'progress') setProgress(msg.value ?? 0)
-      if (msg.type === 'done') {
-        setProcessing(false)
-        setProgress(100)
-        setJobs(prev => prev.map(j => j.status === 'processing' ? { ...j, status: 'done', url: msg.blobUrl } : j))
-      }
-      if (msg.type === 'error') {
-        setProcessing(false)
-        setJobs(prev => prev.map(j => j.status === 'processing' ? { ...j, status: 'error', err: String(msg.error || 'Error') } : j))
-      }
-    }
-    return () => { w.terminate() }
-  }, [])
-
-  const onFiles = (files: FileList | null) => {
-    if (!files || !files.length) return
-    const arr: Job[] = []
-    for (const f of Array.from(files)) {
-      const id = makeId()
-      arr.push({ id, file: f, name: f.name, status: 'queued', originalUrl: URL.createObjectURL(f) })
-    }
-    setJobs(prev => [...prev, ...arr])
-    if (!currentId) setCurrentId(arr[0].id)
-  }
-
-  const current = useMemo(() => jobs.find(j => j.id === currentId), [jobs, currentId])
-
-  const start = () => {
-    if (!current || !workerRef.current) return
-    const modelUrl = tfjsUrl(PRESETS[preset].path) // internal; not shown in UI
-    setProcessing(true)
-    setProgress(0)
-    setJobs(prev => prev.map(j => j.id === current.id ? { ...j, status: 'processing' } : j))
-    workerRef.current.postMessage({ id: current.id, file: current.file, modelUrl })
-  }
-
-  const Header = (
-    <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 14px', position:'sticky', top:0, zIndex:50, background:'linear-gradient(90deg, rgba(30,32,45,.9), rgba(16,18,28,.9))', backdropFilter:'blur(6px)', borderBottom:'1px solid rgba(255,255,255,.08)'}}>
-      <div style={{display:'flex', alignItems:'center', gap:10}}>
-        <img src="https://i.postimg.cc/y6M6KPZ5/logo.jpg" alt="logo" style={{width:28, height:28, borderRadius:'50%', boxShadow:'0 0 12px rgba(178,102,255,.8)'}}/>
-        <b>LavenderDragonDesign Upscaler</b>
-      </div>
-      <div style={{display:'flex', alignItems:'center', gap:8}}>      </div>
+function Tile({ active, label, path, hint, onClick }:{ active:boolean, label:string, path:string, hint:string, onClick:()=>void }){
+  const [show, setShow] = useState(false)
+  return (
+    <div className={`tile ${active?'active':''}`} onMouseEnter={()=>setShow(true)} onMouseLeave={()=>setShow(false)} onClick={onClick}>
+      <div style={{fontWeight:700}}>{label}</div>
+      
+      {show && (
+        <div className="hovercard">
+          <div className="title">{label}</div>
+          <div className="desc">{hint}</div>
+          <div className="desc" style={{marginTop:6}}><b>Model:</b> {path}</div>
+        </div>
+      )}
     </div>
   )
+}
+
+export default function App() {
+  const [files, setFiles] = useState<Job[]>([])
+  const [preset, setPreset] = useState<PresetKey>('g2x') // default to a strong general choice
+  const [busy, setBusy] = useState(false)
+  const [showSplash, setShowSplash] = useState(true)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+
+  const worker = useMemo(() => new Worker(new URL('./workers/tfupscale.worker.ts', import.meta.url), { type:'module' }), [])
+
+  function onFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = Array.from(e.target.files || [])
+    const jobs: Job[] = f.map((file, i) => ({
+      id: `${Date.now()}_${i}`,
+      file,
+      name: file.name,
+      status: 'queued'
+    }))
+    setFiles(j => [...j, ...jobs])
+  }
+
+  function start() {
+    if (busy) return
+    setBusy(true)
+    const folder = PRESETS[preset].path
+    const modelUrl = tfjsUrl(folder)
+
+    worker.onmessage = (ev: MessageEvent<any>) => {
+      const msg = ev.data
+      setFiles(prev => prev.map(j => {
+        if (j.id !== msg.id) return j
+        if (msg.type === 'done') return { ...j, status: 'done', url: msg.blobUrl }
+        if (msg.type === 'error') return { ...j, status: 'error', err: msg.error }
+        return j
+      }))
+    }
+
+    setFiles(prev => prev.map(j => {
+      if (j.status === 'queued') {
+        worker.postMessage({ id: j.id, file: j.file, modelUrl })
+        return { ...j, status: 'processing' }
+      }
+      return j
+    }))
+    setBusy(false)
+  }
 
   return (
     <>
       {showSplash && <Splash onDone={() => setShowSplash(false)} />}
-
-      <div style={{minHeight:'100vh', background:'linear-gradient(180deg,#0f1220,#0a0d16)'}}>
-        {Header}
-
-        <div className="wrap" style={{maxWidth:1100, margin:'0 auto', padding:16}}>
-          {jobs.length > 0 && (<div className="card" style={{padding:14}}>
-            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10}}>
-              <b>Live Preview</b>
-              {processing && <LogoSpinner src="https://i.postimg.cc/y6M6KPZ5/logo.jpg" size={48} progress={progress}/>}
+      <div className="wrap">
+        <div className="card">
+          <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+            <div>
+              <h1 style={{marginTop:0}}>LavenderDragonDesign Upscaler</h1>
+              <p className="muted" style={{marginTop:-10}}>Frontend on Netlify · Models on Hugging Face</p>
             </div>
-            <BeforeAfterSlider beforeUrl={current?.originalUrl} afterUrl={current?.url} height={380} />
-          </div>) /* end preview card */
-
-          {jobs.length > 0 && (<div className="card" style={{marginTop:12}}>
-            <ThumbStrip
-              items={jobs.map(j => ({ id: j.id, url: j.originalUrl || '', name: j.name }))}
-              current={current?.id}
-              onSelect={setCurrentId}
-            />
+            <button className="btn" onClick={()=>setSettingsOpen(true)} title="Settings">
+              <Cog size={16} style={{marginRight:6}}/> Settings
+            </button>
           </div>
 
-          <div className="card" style={{padding:12, marginTop:12}}>
-            <b>Queue</b>
-            <div style={{marginTop:8, display:'flex', flexDirection:'column', gap:10, maxHeight:520, overflow:'auto'}}>
-              {jobs.map(j => (
-                <div key={j.id} className="row" style={{display:'grid', gridTemplateColumns:'72px 1fr', gap:10, alignItems:'center', border:'1px solid rgba(255,255,255,.08)', borderRadius:12, padding:8, background:'rgba(255,255,255,.02)'}}>
-                  <img src={j.originalUrl} alt="" style={{width:72, height:72, borderRadius:8, objectFit:'cover'}}/>
-                  <div>
-                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                      <div style={{fontWeight:600, fontSize:14, opacity:.95, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{j.name}</div>
-                      <div style={{fontSize:12, opacity:.8}}>
-                        {j.status === 'queued' && 'Queued'}
-                        {j.status === 'processing' && `Processing ${progress}%`}
-                        {j.status === 'done' && <a href={j.url} download className="link">Download</a>}
-                        {j.status === 'error' && <span style={{color:'#fca5a5'}} title={j.err || 'Error'}>Error</span>}
-                      </div>
-                    </div>
-                    {j.status !== 'done' && <div style={{height:6, background:'rgba(255,255,255,.1)', borderRadius:6, overflow:'hidden', marginTop:6}}>
-                      <div style={{height:'100%', width:`${j.status==='processing'?progress:0}%`, background:'#22c55e'}}/>
-                    </div>}
-                  </div>
+          <div style={{marginTop:8, marginBottom:6}} className="muted">Pick a model (hover for tips):</div>
+          <div className="row">
+            {(Object.keys(PRESETS) as PresetKey[]).map(k => (
+              <Tile key={k}
+                active={preset===k}
+                label={PRESETS[k].label}
+                path={PRESETS[k].path}
+                hint={PRESETS[k].hint}
+                onClick={()=>setPreset(k)}
+              />
+            ))}
+          </div>
+
+          <div style={{marginTop:16}}>
+            <input type="file" multiple accept="image/*" onChange={onFiles} />
+          </div>
+
+          <div style={{marginTop:16}}>
+            <button className="btn" disabled={!files.some(f=>f.status==='queued')} onClick={start}>
+              <Download size={16} style={{marginRight:6}}/> Start Upscale
+            </button>
+          </div>
+
+          <div className="queue" style={{marginTop:16}}>
+            <h3 style={{marginTop:0}}>Queue</h3>
+            {files.length===0 && <div className="muted">Drop or choose images to begin.</div>}
+            {files.map(j => (
+              <div key={j.id} className="row" style={{alignItems:'center', justifyContent:'space-between'}}>
+                <div>{j.name}</div>
+                <div className="muted">{j.status}</div>
+                <div>
+                  {j.url && <a className="btn" href={j.url} download={`upscaled-${j.name}`}>Download</a>}
+                  {j.err && <span style={{color:'#fca5a5'}}> {j.err}</span>}
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
 
-          <div className="footer" style={{opacity:.6, fontSize:12, marginTop:18}}>© LavenderDragonDesign</div>
+          <div className="footer">© LavenderDragonDesign</div>
         </div>
       </div>
 
-      <SettingsDialog
-        open={settingsOpen}
-        onClose={()=>setSettingsOpen(false)}
-        value={preset}
-        onChange={(v)=>{ setPreset(v); setSettingsOpen(false); }}
-      />
+      <SettingsDialog open={settingsOpen} onClose={()=>setSettingsOpen(false)} value={preset} onChange={(v)=>{ setPreset(v); setSettingsOpen(false); }} />
     </>
   )
 }

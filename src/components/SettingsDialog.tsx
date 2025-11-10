@@ -22,6 +22,7 @@ export default function SettingsDialog({
               </div>
           ))}
         </div>
+        <div style={{marginTop:12, opacity:.7, fontSize:12}}>Auto mode is enabled.</div>
       </div>
     </div>
   )

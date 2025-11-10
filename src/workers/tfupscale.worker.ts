@@ -3,14 +3,21 @@ import * as tf from '@tensorflow/tfjs'
 import '@tensorflow/tfjs-backend-webgl'
 import '@tensorflow/tfjs-backend-wasm'
 import { setWasmPaths } from '@tensorflow/tfjs-backend-wasm'
-async function assertReachable(url: string) {
-  try {
-    const r = await fetch(url, { method: 'HEAD', mode: 'cors' });
-    if (!r.ok) throw new Error(`HTTP ${r.status} ${r.statusText}`);
-  } catch (e:any) {
-    throw new Error(`Model fetch failed for ${url} — ${e?.message || e}`);
-  }
-}
+
+// Configure WASM binaries (CDN) and helpful WebGL diagnostics
+setWasmPaths('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-wasm@4.22.0/dist/')
+
+// Debug + stability knobs (will log shader sources & link errors)
+try {
+  tf.env().set('WEBGL_LOG_DEBUG', true);
+  tf.env().set('WEBGL_VALIDATE_SHADERS', true);
+  tf.env().set('WEBGL_FORCE_F16_TEXTURES', false);
+  tf.env().set('WEBGL_VERSION', 2);
+  tf.env().set('WEBGL_PACK', true);
+  tf.env().set('WEBGL_CPU_FORWARD', false);
+  tf.env().set('WEBGL_FLUSH_THRESHOLD', 1e6);
+  tf.env().set('WEBGL_CHECK_NUMERICS', false);
+} catch {}
 
 type Job = { id: string; file: File; modelUrl: string }
 type Msg =
@@ -54,51 +61,47 @@ function canvasToNHWC(canvas: OffscreenCanvas): tf.Tensor4D {
 }
 
 async function tensorToBlobNHWC01(t: tf.Tensor, mime = 'image/png'): Promise<Blob> {
-  try {
-  const [h, w, c] = (t.shape as number[]).slice(-3)
-  const cpu = (await t.data()) as Float32Array
+  const t3 = t.squeeze() as tf.Tensor3D
+  const [h, w, c] = t3.shape
   const canvas = new OffscreenCanvas(w, h)
   const ctx = canvas.getContext('2d')!
   const img = ctx.createImageData(w, h)
+  const data = await t3.data() as Float32Array
   let di = 0
-  for (let i = 0; i < h * w; i++) {
-    img.data[di++] = Math.max(0, Math.min(255, Math.round(cpu[i * c + 0] * 255)))
-    img.data[di++] = Math.max(0, Math.min(255, Math.round(cpu[i * c + 1] * 255)))
-    img.data[di++] = Math.max(0, Math.min(255, Math.round(cpu[i * c + 2] * 255)))
-    img.data[di++] = 255
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * c
+      img.data[di++] = Math.max(0, Math.min(255, Math.round(data[i + 0] * 255)))
+      img.data[di++] = Math.max(0, Math.min(255, Math.round(data[i + 1] * 255)))
+      img.data[di++] = Math.max(0, Math.min(255, Math.round(data[i + 2] * 255)))
+      img.data[di++] = 255
+    }
   }
   ctx.putImageData(img, 0, 0)
-  return await new Promise(res => canvas.toBlob(b => res(b!), mime))
+
+  // Prefer OffscreenCanvas.convertToBlob if available, else toDataURL fallback
+  const anyCanvas: any = canvas as any
+  if (typeof anyCanvas.convertToBlob === 'function') {
+    return await anyCanvas.convertToBlob({ type: mime })
+  }
+  const backing = (ctx as any)?.canvas ?? anyCanvas
+  if (typeof backing.toDataURL !== 'function') {
+    throw new Error('No convertToBlob or toDataURL available on canvas')
+  }
+  const dataUrl: string = backing.toDataURL(mime)
+  const base64 = dataUrl.split(',')[1]
+  const bin = atob(base64)
+  const buf = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i)
+  return new Blob([buf], { type: mime })
 }
 
-// Configure WASM path and debug flags
-setWasmPaths('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-wasm@4.22.0/dist/')
-try { tf.env().set('WEBGL_LOG_DEBUG', true); tf.env().set('WEBGL_VALIDATE_SHADERS', true); } catch {}
-self.onmessage = (async (e: any) => {
-  const { id, file, modelUrl } = e.data || {};
-  const post = (msg:any)=> (self as any).postMessage(msg);
-  const postErr = (stage: string, err: any) => post({ id, type: 'error', error: String(err?.message || err), stack: String(err?.stack || ''), stage });
-  try {
+self.onmessage = (async (e: MessageEvent<Job>) => {
   const { id, file, modelUrl } = e.data
   try {
     ;(self as any).postMessage({ id, type: 'progress', value: 3 } as Msg)
-    try { try { await tf.setBackend('webgl'); await tf.ready() } catch { await tf.setBackend('wasm'); await tf.ready() }
-    ;(self as any).postMessage({ id, type:'progress', value:1 }) } catch (e) { await tf.setBackend('wasm'); await tf.ready() }
-    post({ id, type: 'progress', value: 3 });
-    try { await assertReachable(modelUrl) } catch(e) { return postErr('preflight', e) }
-    let model;
-    let PATCH_W = 128, PATCH_H = 128;
-    try { model = await tf.loadGraphModel(modelUrl) } catch(e) { return postErr('loadGraphModel', e) }
-    try {
-      const inShape = model.inputs?.[0]?.shape as number[] | undefined;
-      if (Array.isArray(inShape) && inShape.length >= 4) {
-        PATCH_H = (inShape[1] as number) || 128;
-        PATCH_W = (inShape[2] as number) || 128;
-      }
-    } catch {}
-    // safety: keep patches modest to prevent huge shaders
-    PATCH_W = Math.min(PATCH_W, 128);
-    PATCH_H = Math.min(PATCH_H, 128);
+    try { await tf.setBackend('webgl'); await tf.ready() } catch (e) { await tf.setBackend('wasm'); await tf.ready() }
+    const model = await tf.loadGraphModel(modelUrl)
     ;(self as any).postMessage({ id, type: 'progress', value: 8 } as Msg)
 
     const inShape = model.inputs[0].shape as number[] // e.g., [1,128,128,3]
@@ -157,11 +160,34 @@ self.onmessage = (async (e: any) => {
       }
     }
 
-    const finalBlob = await outCanvas.convertToBlob({ type: 'image/png' })
-    const url = URL.createObjectURL(finalBlob)
-    ;(self as any).postMessage({ id, type: 'done', blobUrl: url } as Msg)
+    let finalBlob: Blob | null = null
+try {
+  const anyCanvas: any = outCanvas as any
+  if (typeof anyCanvas.convertToBlob === 'function') {
+    finalBlob = await anyCanvas.convertToBlob({ type: 'image/png' })
+  } else {
+    // Fallback for environments without OffscreenCanvas.convertToBlob
+    const ctx = outCanvas.getContext('2d') as OffscreenCanvasRenderingContext2D
+    // Prefer the backing HTMLCanvasElement if available
+    const backing: any = (ctx as any)?.canvas ?? outCanvas
+    if (typeof backing.toDataURL !== 'function') {
+      throw new Error('No convertToBlob or toDataURL available on canvas')
+    }
+    const dataUrl: string = backing.toDataURL('image/png')
+    const base64 = dataUrl.split(',')[1]
+    const bin = atob(base64)
+    const buf = new Uint8Array(bin.length)
+    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i)
+    finalBlob = new Blob([buf], { type: 'image/png' })
+  }
+} catch (e) {
+  console.error('Blob creation failed:', e)
+  throw e
+}
+
+const url = URL.createObjectURL(finalBlob!)
+;(self as any).postMessage({ id, type: 'done', blobUrl: url } as Msg)
   } catch (err: any) {
     ;(self as any).postMessage({ id, type: 'error', error: String(err?.message || err) } as Msg)
   }
-  } catch (err:any) { postErr('worker-top', err) }
-});
+})
