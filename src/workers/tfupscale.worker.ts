@@ -111,8 +111,9 @@ self.onmessage = (async (e: any) => { const { id, file, modelUrl } = e.data || {
   const { id, file, modelUrl } = e.data
   try {
     ;(self as any).postMessage({ id, type: 'progress', value: 3 } as Msg)
-    try { try { await tf.setBackend('webgl'); await tf.ready() } catch { await tf.setBackend('wasm'); await tf.ready() } } catch (e) { await tf.setBackend('wasm'); await tf.ready() }
-    post({id,type:'progress',value:3}); try{ await assertReachable(modelUrl) }catch(e){ return postErr('preflight',e) } let model; try{ model = await tf.loadGraphModel(modelUrl) }catch(e){ return postErr('loadGraphModel',e) }
+    try { await tf.setBackend('wasm'); await tf.ready() } catch (e) { await tf.setBackend('wasm'); await tf.ready() }
+    post({id,type:'progress',value:3}); try{ await assertReachable(modelUrl) }catch(e){ return postErr('preflight',e) } let model;
+    let PATCH_W = 64, PATCH_H = 64; try{ model = await tf.loadGraphModel(modelUrl) }catch(e){ return postErr('loadGraphModel',e) }
     ;(self as any).postMessage({ id, type: 'progress', value: 8 } as Msg)
 
     const inShape = model.inputs[0].shape as number[] // e.g., [1,128,128,3]
@@ -202,3 +203,6 @@ const url = URL.createObjectURL(finalBlob!)
     ;(self as any).postMessage({ id, type: 'error', error: String(err?.message || err) } as Msg)
   }
 } catch(err:any){ postErr('worker-top', err) } });
+// safety cap
+PATCH_W = Math.min(PATCH_W, 64);
+PATCH_H = Math.min(PATCH_H, 64);
