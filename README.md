@@ -1,31 +1,37 @@
-# LavenderDragonDesign Upscaler — Netlify Deploy (Frontend Only)
+# LavenderDragonDesign Upscaler — HF Presets + Buttons UI (7.4.2)
 
-React + Vite + TypeScript app. Models are hosted on **Hugging Face** and loaded at runtime via **TFJS**.
+**What you get**
+- Hugging Face **model presets** prefilled (General/Anime 2×/4× + extras)
+- Big **Upscale** buttons with **hover white-card** tips
+- Splash screen + Lucide settings popup
+- TFJS **tiling worker** (fixed-input models OK)
+- Netlify + Vite ready
 
-## Configure presets
-Edit `src/lib/modelCatalog.ts` and set the right-hand paths to your folders on Hugging Face.
-They resolve to:
+## Set your exact HF folders
+Edit `src/lib/modelCatalog.ts` — replace the `path` values to match your Space:
 ```
 https://huggingface.co/spaces/akessleretsy/1/resolve/main/models/<folder>/model.json
 ```
+Examples included:
+```
+realesrgan/general_fast-128
+realesrgan/general_plus-256
+realcugan/2x-denoise2x-128
+realcugan/2x-conservative-256
+realcugan/2x-no-denoise-128
+realcugan/3x-conservative-192
+```
 
 ## Dev
-```
 npm i
 npm run dev
-```
 
 ## Build
-```
 npm run build
 npm run preview
-```
 
-## Deploy to Netlify
+## Netlify
 - Build command: `npm run build`
 - Publish directory: `dist`
-- `netlify.toml` already includes SPA redirect.
-- Optional: set Environment variable `NODE_VERSION = 20`.
-
-## Custom domain (recommended)
-Point `upscale.lddtools.lol` (CNAME) to your Netlify site.
+- SPA via `netlify.toml`
+- Optional: env `NODE_VERSION = 20`

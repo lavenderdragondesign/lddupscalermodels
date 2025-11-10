@@ -1,4 +1,4 @@
-// TFJS Web Worker: loads model.json from HF and returns a PNG Blob URL
+// TFJS tiling worker to support fixed input shapes like [1,128,128,3]
 import * as tf from '@tensorflow/tfjs'
 import '@tensorflow/tfjs-backend-webgl'
 
@@ -13,13 +13,25 @@ async function toBitmap(file: File) {
   return await createImageBitmap(new Blob([buf], { type: file.type }))
 }
 
-function bitmapToNHWC(bmp: ImageBitmap): tf.Tensor4D {
-  const w = bmp.width, h = bmp.height
+function drawToCanvas(src: ImageBitmap | HTMLCanvasElement): OffscreenCanvas {
+  const w = (src as any).width, h = (src as any).height
   const c = new OffscreenCanvas(w, h)
   const ctx = c.getContext('2d')!
-  ctx.drawImage(bmp, 0, 0)
-  const data = ctx.getImageData(0, 0, w, h).data
+  ctx.drawImage(src as any, 0, 0)
+  return c
+}
 
+function cropCanvas(src: OffscreenCanvas, x: number, y: number, w: number, h: number): OffscreenCanvas {
+  const c = new OffscreenCanvas(w, h)
+  const ctx = c.getContext('2d')!
+  ctx.drawImage(src, x, y, w, h, 0, 0, w, h)
+  return c
+}
+
+function canvasToNHWC(canvas: OffscreenCanvas): tf.Tensor4D {
+  const w = canvas.width, h = canvas.height
+  const ctx = canvas.getContext('2d')!
+  const data = ctx.getImageData(0, 0, w, h).data
   const arr = new Float32Array(h * w * 3)
   let ai = 0
   for (let i = 0; i < data.length; i += 4) {
@@ -31,7 +43,7 @@ function bitmapToNHWC(bmp: ImageBitmap): tf.Tensor4D {
   return t3.expandDims(0) // [1,H,W,3]
 }
 
-async function tensorToBlob(t: tf.Tensor, mime = 'image/png'): Promise<Blob> {
+async function tensorToBlobNHWC01(t: tf.Tensor, mime = 'image/png'): Promise<Blob> {
   const [h, w, c] = (t.shape as number[]).slice(-3)
   const cpu = (await t.data()) as Float32Array
   const canvas = new OffscreenCanvas(w, h)
@@ -51,24 +63,69 @@ async function tensorToBlob(t: tf.Tensor, mime = 'image/png'): Promise<Blob> {
 self.onmessage = (async (e: MessageEvent<Job>) => {
   const { id, file, modelUrl } = e.data
   try {
-    ;(self as any).postMessage({ id, type: 'progress', value: 5 } as Msg)
+    ;(self as any).postMessage({ id, type: 'progress', value: 3 } as Msg)
     await tf.setBackend('webgl'); await tf.ready()
     const model = await tf.loadGraphModel(modelUrl)
-    ;(self as any).postMessage({ id, type: 'progress', value: 20 } as Msg)
+    ;(self as any).postMessage({ id, type: 'progress', value: 8 } as Msg)
+
+    const inShape = model.inputs[0].shape as number[] // e.g., [1,128,128,3]
+    const TILE_H = inShape[1] || 128
+    const TILE_W = inShape[2] || 128
+    const OVERLAP = 16
 
     const bmp = await toBitmap(file)
-    const input = bitmapToNHWC(bmp)               // [1,H,W,3]
-    const feeds: Record<string, tf.Tensor> = { [model.inputs[0].name]: input }
-    const outAny = await model.executeAsync(feeds)
-    const out = Array.isArray(outAny) ? outAny[0] : outAny as tf.Tensor // [1,H,W,3]
+    const srcCanvas = drawToCanvas(bmp)
+    const W = srcCanvas.width, H = srcCanvas.height
 
-    ;(self as any).postMessage({ id, type: 'progress', value: 90 } as Msg)
+    const testTile = cropCanvas(srcCanvas, 0, 0, Math.min(TILE_W, W), Math.min(TILE_H, H))
+    const fitCanvas = new OffscreenCanvas(TILE_W, TILE_H)
+    fitCanvas.getContext('2d')!.drawImage(testTile, 0, 0, TILE_W, TILE_H)
+    let tin = canvasToNHWC(fitCanvas)
+    const feeds0: Record<string, tf.Tensor> = { [model.inputs[0].name]: tin }
+    const outAny0 = await model.executeAsync(feeds0)
+    const out0 = Array.isArray(outAny0) ? outAny0[0] : outAny0 as tf.Tensor
+    const outShape = out0.shape as number[]
+    const SCALE = Math.round((outShape[1] || TILE_H) / TILE_H) || 2
+    tin.dispose(); (out0 as any).dispose()
 
-    const out3 = (out as any).squeeze() // [H,W,3]
-    const blob = await tensorToBlob(out3)
-    out3.dispose(); (input as any).dispose()
+    const outCanvas = new OffscreenCanvas(W * SCALE, H * SCALE)
+    const outCtx = outCanvas.getContext('2d')!
 
-    const url = URL.createObjectURL(blob)
+    const stepX = TILE_W - OVERLAP
+    const stepY = TILE_H - OVERLAP
+    let processed = 0
+    const total = Math.ceil(W / stepX) * Math.ceil(H / stepY)
+
+    for (let y = 0; y < H; y += stepY) {
+      for (let x = 0; x < W; x += stepX) {
+        const tileW = (x + TILE_W <= W) ? TILE_W : (W - x)
+        const tileH = (y + TILE_H <= H) ? TILE_H : (H - y)
+        const tile = cropCanvas(srcCanvas, x, y, tileW, tileH)
+        const tcanvas = new OffscreenCanvas(TILE_W, TILE_H)
+        tcanvas.getContext('2d')!.drawImage(tile, 0, 0, TILE_W, TILE_H)
+
+        const tnhwc = canvasToNHWC(tcanvas)
+        const feeds: Record<string, tf.Tensor> = { [model.inputs[0].name]: tnhwc }
+        const outAny = await model.executeAsync(feeds)
+        const outT = Array.isArray(outAny) ? outAny[0] : outAny as tf.Tensor
+
+        const out3 = (outT as any).squeeze() as tf.Tensor3D
+        const blob = await tensorToBlobNHWC01(out3)
+        out3.dispose(); tnhwc.dispose(); (outT as any).dispose()
+
+        const drawW = tileW * SCALE
+        const drawH = tileH * SCALE
+        const img = await createImageBitmap(blob)
+        const sx = 0, sy = 0, sW = drawW, sH = drawH
+        const dx = x * SCALE, dy = y * SCALE, dW = drawW, dH = drawH
+        outCtx.drawImage(img, sx, sy, sW, sH, dx, dy, dW, dH)
+
+        ;(self as any).postMessage({ id, type: 'progress', value: Math.floor(10 + 80 * (++processed / total)) } as Msg)
+      }
+    }
+
+    const finalBlob = await outCanvas.convertToBlob({ type: 'image/png' })
+    const url = URL.createObjectURL(finalBlob)
     ;(self as any).postMessage({ id, type: 'done', blobUrl: url } as Msg)
   } catch (err: any) {
     ;(self as any).postMessage({ id, type: 'error', error: String(err?.message || err) } as Msg)

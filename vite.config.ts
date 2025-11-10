@@ -3,6 +3,6 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/', // subdomain-friendly (e.g., upscale.lddtools.lol)
+  base: '/',
   build: { target: 'es2020' }
 })
