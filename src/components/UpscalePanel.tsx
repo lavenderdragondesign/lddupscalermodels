@@ -5,6 +5,24 @@ import { fetchManifest, createSession, Manifest } from '../lib/onnx'
 import { runTiled } from '../lib/tiler'
 
 
+async function loadManifestWithFallback(url: string) {
+  try {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const m = await res.json();
+    // Filter out 1× just in case
+    m.models = (m.models || []).filter((x: any) => (x.scale || 1) !== 1);
+    return m;
+  } catch (e) {
+    console.warn('Manifest fetch failed, using local fallback.', e);
+    const res2 = await fetch('/onnx_manifest_fallback.json', { cache: 'no-store' });
+    const m2 = await res2.json();
+    m2.models = (m2.models || []).filter((x: any) => (x.scale || 1) !== 1);
+    return m2;
+  }
+}
+
+
 
 async function preflightModel(url: string): Promise<{ ok: boolean; url: string; reason?: string }> {
   try {
@@ -44,9 +62,7 @@ export default function UpscalePanel(){
   const outCanvasRef = useRef<HTMLCanvasElement>(null)
 
   React.useEffect(()=>{
-    fetchManifest(HF_MANIFEST).then((m)=>{ m.models = m.models.filter(x => (x.scale||1) !== 1); return m }).then(setManifest).catch(e=>{
-      console.error(e); setStatus('Failed to load manifest.')
-    })
+    loadManifestWithFallback(HF_MANIFEST).then(setManifest).catch(e=>{ console.error(e); setStatus('Failed to load manifest (and no fallback).') })
   },[])
 
   function onFile(file: File){
