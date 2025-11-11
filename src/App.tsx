@@ -1,3 +1,4 @@
+import UpscalerUI from './components/UpscalerUI';
 
 import React from 'react'
 import Header from './components/Header'
