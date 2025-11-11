@@ -4,7 +4,7 @@ import * as ort from 'onnxruntime-web'
 import { fetchManifest, createSession, Manifest } from '../lib/onnx'
 import { runTiled } from '../lib/tiler'
 
-const HF_MANIFEST = "https://akessleretsy-onnxmodels.hf.space/file/onnx_models/manifest.json"
+const HF_MANIFEST = "https://huggingface.co/spaces/akessleretsy/onnxmodels/resolve/main/onnx_models/manifest.json"
 
 export default function UpscalePanel(){
   const [manifest, setManifest] = React.useState<Manifest | null>(null)
