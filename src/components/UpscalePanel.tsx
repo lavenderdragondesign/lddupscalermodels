@@ -4,6 +4,16 @@ import * as ort from 'onnxruntime-web'
 import { fetchManifest, createSession, Manifest } from '../lib/onnx'
 import { runTiled } from '../lib/tiler'
 
+
+function resolveModelURL(manifestBase: string, modelPath: string) {
+  // Absolute URL in path wins
+  if (/^https?:\/\//i.test(modelPath)) return modelPath;
+  // Prefer Hub "resolve/main" over Space "/file" endpoints (Space must be running)
+  const HUB_BASE = "https://huggingface.co/spaces/akessleretsy/onnxmodels/resolve/main";
+  const base = manifestBase.includes(".hf.space/file") ? HUB_BASE : manifestBase;
+  return base.replace(/\/$/, "") + modelPath;
+}
+
 const HF_MANIFEST = "https://huggingface.co/spaces/akessleretsy/onnxmodels/resolve/main/onnx_models/manifest.json"
 
 export default function UpscalePanel(){
