@@ -51,6 +51,7 @@ export default function UpscalePanel(){
     if (!m) return setStatus('Model not found in manifest.')
     const url = manifest.base.replace(/\/$/,'') + m.path
     setBusy(true); setStatus('Loading model…')
+    
     try {
       const session = await createSession(url)
       setStatus('Running upscaler…')
@@ -63,11 +64,29 @@ export default function UpscalePanel(){
       setStatus(`Done • ${inCanvasRef.current!.width}×${inCanvasRef.current!.height} → ${result.width}×${result.height}`)
     } catch (e:any){
       console.error(e)
+      // Fallback: if scale1x failed (often broken external-data), try scale2x sibling
+      if (/scale1x\.onnx$/i.test(url)) {
+        try {
+          const alt = url.replace(/scale1x\.onnx$/i, 'scale2x.onnx')
+          setStatus('Model failed, retrying with scale2x…')
+          const session2 = await createSession(alt)
+          const result2 = await runTiled(session2, inCanvasRef.current!, {
+            tileSize, overlap, expects: m.expects || 'NHWC', scale: 2
+          })
+          const out = outCanvasRef.current!
+          out.width = result2.width; out.height = result2.height
+          const ctx = out.getContext('2d')!; ctx.drawImage(result2, 0, 0)
+          setStatus(`Done (fallback 2×) • ${inCanvasRef.current!.width}×${inCanvasRef.current!.height} → ${result2.width}×${result2.height}`)
+          return
+        } catch (e2:any) {
+          console.error(e2)
+        }
+      }
       setStatus('Error: ' + e.message)
     } finally {
       setBusy(false)
     }
-  }
+}
 
   function downloadOut(){
     const out = outCanvasRef.current!
