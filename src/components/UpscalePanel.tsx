@@ -5,6 +5,22 @@ import { fetchManifest, createSession, Manifest } from '../lib/onnx'
 import { runTiled } from '../lib/tiler'
 
 
+
+async function preflightModel(url: string): Promise<{ ok: boolean; url: string; reason?: string }> {
+  try {
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return { ok: false, url, reason: `HTTP ${res.status}` };
+    const len = +(res.headers.get('content-length') || '0');
+    // Tiny external-data stubs are ~1-5 KB. Real models are usually > 5 MB.
+    if (len && len < 5000000) {
+      return { ok: false, url, reason: `Too small (${len} bytes)` };
+    }
+    return { ok: true, url };
+  } catch (e:any) {
+    return { ok: false, url, reason: e.message };
+  }
+}
+
 function resolveModelURL(manifestBase: string, modelPath: string) {
   // Absolute URL in path wins
   if (/^https?:\/\//i.test(modelPath)) return modelPath;
@@ -18,7 +34,7 @@ const HF_MANIFEST = "https://huggingface.co/spaces/akessleretsy/onnxmodels/resol
 
 export default function UpscalePanel(){
   const [manifest, setManifest] = React.useState<Manifest | null>(null)
-  const [modelId, setModelId] = React.useState<string>('swin-photo-scale2x')
+  const [modelId, setModelId] = React.useState<string>('swin-artscan-n0x2' as any)
   const [tileSize, setTileSize] = React.useState<number>(256)
   const [overlap, setOverlap] = React.useState<number>(32)
   const [busy, setBusy] = React.useState<boolean>(false)
@@ -28,7 +44,7 @@ export default function UpscalePanel(){
   const outCanvasRef = useRef<HTMLCanvasElement>(null)
 
   React.useEffect(()=>{
-    fetchManifest(HF_MANIFEST).then(setManifest).catch(e=>{
+    fetchManifest(HF_MANIFEST).then((m)=>{ m.models = m.models.filter(x => (x.scale||1) !== 1); return m }).then(setManifest).catch(e=>{
       console.error(e); setStatus('Failed to load manifest.')
     })
   },[])
@@ -53,10 +69,16 @@ export default function UpscalePanel(){
     setBusy(true); setStatus('Loading model…')
     
     try {
-      const session = await createSession(url)
-      setStatus('Running upscaler…')
+      const pf = await preflightModel(url);
+if (!pf.ok && /scale1x\.onnx$/i.test(url)) {
+  const alt = url.replace(/scale1x\.onnx$/i, 'scale2x.onnx');
+  setStatus(`Model looks invalid (${pf.reason}). Trying 2× instead…`);
+  url = alt;
+}
+const session = await createSession(url)
+setStatus('Running upscaler…')
       const result = await runTiled(session, inCanvasRef.current!, {
-        tileSize, overlap, expects: m.expects || 'NHWC', scale: m.scale || 1
+        tileSize, overlap, expects: m.expects || 'NHWC', scale: m.scale || 2
       })
       const out = outCanvasRef.current!
       out.width = result.width; out.height = result.height
