@@ -1,6 +1,33 @@
 import * as tf from "@tensorflow/tfjs";
 import "@tensorflow/tfjs-backend-webgpu";
 import Img from "./image";
+
+const CDN_BASE = (self && self.CDN_BASE_OVERRIDE) || "https://raw.githubusercontent.com/lavenderdragondesign/lddupscalermodels/main";
+
+/**
+ * Build a CDN URL for the selected model; falls back to app-relative path.
+ * kind: "realesrgan" | "realcugan"
+ */
+function buildModelURL(kind, opts) {
+  try {
+    if (kind === "realesrgan") {
+      const u = `${CDN_BASE}/realesrgan/${opts.model}-${opts.tile_size}/model.json`;
+      return u;
+    } else {
+      // realcugan adopts factor x denoise pattern like "4x-3" etc.
+      const u = `${CDN_BASE}/realcugan/${opts.factor}x-${opts.denoise}-${opts.tile_size}/model.json`;
+      return u;
+    }
+  } catch (e) {
+    // Fall through to local paths
+  }
+  // Local fallback
+  if (kind === "realesrgan") {
+    return `/realesrgan/${opts.model}-${opts.tile_size}/model.json`;
+  }
+  return `/realcugan/${opts.factor}x-${opts.denoise}-${opts.tile_size}/model.json`;
+}
+
 import upscale from "./upscale";
 
 self.addEventListener("message", async (e) => {
@@ -8,10 +35,10 @@ self.addEventListener("message", async (e) => {
   let model_url;
   let model_name;
   if (data?.model_type === "realesrgan") {
-    model_url = `/realesrgan/${data?.model}-${data?.tile_size}/model.json`;
+    model_url = buildModelURL('realesrgan', { model: data?.model, tile_size: data?.tile_size });
     model_name = `realesrgan-${data?.model}-${data?.tile_size}`;
   } else {
-    model_url = `/realcugan/${data?.factor}x-${data?.denoise}-${data?.tile_size}/model.json`;
+    model_url = buildModelURL('realcugan', { factor: data?.factor, denoise: data?.denoise, tile_size: data?.tile_size });
     model_name = `realcugan-${data?.factor}x-${data?.denoise}-${data?.tile_size}`;
   }
   if (!(await tf.setBackend(data?.backend || "webgl"))) {

@@ -103,3 +103,15 @@ Pytorch model -> ONNX -> Tensorflow saved model -> Tensorflow.js
 - [microsoft/onnxruntime](https://github.com/microsoft/onnxruntime)
 - [PINTO0309/onnx2tf](https://github.com/PINTO0309/onnx2tf)
 - [tensorflow/tfjs](https://github.com/tensorflow/tfjs)
+
+
+## Model CDN
+Default CDN:
+```
+https://cdn.jsdelivr.net/gh/lavenderdragondesign/lddupscalermodels@main
+```
+Override at runtime with:
+```js
+// in main page (iframe host) before starting:
+window.CDN_BASE_OVERRIDE = "https://raw.githubusercontent.com/lavenderdragondesign/lddupscalermodels/main";
+```
