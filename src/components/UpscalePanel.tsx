@@ -91,7 +91,11 @@ if (!pf.ok && /scale1x\.onnx$/i.test(url)) {
   setStatus(`Model looks invalid (${pf.reason}). Trying 2× instead…`);
   url = alt;
 }
-const session = await createSession(url)
+const session = await createSession(url);
+      const inName = session.inputNames[0];
+      // @ts-ignore
+      const dims = session.inputMetadata[inName]?.dimensions;
+      setStatus(prev => prev + ` | Layout: ${Array.isArray(dims)&&dims[1]===3?'NCHW':'NHWC'}`)
 setStatus('Running upscaler…')
       const result = await runTiled(session, inCanvasRef.current!, {
         tileSize, overlap, expects: m.expects || 'NHWC', scale: m.scale || 2
