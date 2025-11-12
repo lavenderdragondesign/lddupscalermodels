@@ -2,44 +2,14 @@
   <div class="panel">
     <ModelSelector :modelKey="modelKey" @update:modelKey="$emit('update:modelKey', $event)" />
 
-    <div class="grid">
-      <label>
-        Scale
-        <select :value="scale" @change="$emit('update:scale', Number(($event.target as HTMLSelectElement).value))">
-          <option :value="2">2x</option>
-          <option :value="4">4x</option>
-        </select>
-      </label>
-
-      <label>
-        Tile size
-        <input
-          type="number"
-          min="128"
-          max="1024"
-          step="64"
-          :value="tileSize"
-          @input="$emit('update:tileSize', Number(($event.target as HTMLInputElement).value))"
-        />
-      </label>
-
-      <label>
-        Overlap
-        <input
-          type="number"
-          min="0"
-          max="64"
-          step="4"
-          :value="overlap"
-          @input="$emit('update:overlap', Number(($event.target as HTMLInputElement).value))"
-        />
-      </label>
+    <div class="hint">
+      Engines are tuned for different images. Hover each option for tips on when to use it.
     </div>
 
     <div class="progress-row">
       <button class="btn" type="button" @click="$emit('upscale')" :disabled="busy">
         <span v-if="busy">Upscaling…</span>
-        <span v-else>Upscale</span>
+        <span v-else>Upscale image</span>
       </button>
 
       <div v-if="busy" class="progress">
@@ -57,48 +27,33 @@ import ModelSelector from "./ModelSelector.vue";
 
 defineProps<{
   modelKey: string;
-  backend: "webgl" | "webgpu";
-  scale: number;
-  tileSize: number;
-  overlap: number;
   busy: boolean;
   progress: number;
 }>();
 
 defineEmits<{
   "update:modelKey": [string];
-  "update:backend": ["webgl" | "webgpu"];
-  "update:scale": [number];
-  "update:tileSize": [number];
-  "update:overlap": [number];
   upscale: [];
 }>();
 </script>
 
 <style scoped>
 .panel {
-  margin-top: 16px;
+  margin-top: 8px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
-.grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+.hint {
+  font-size: 11px;
+  opacity: 0.7;
 }
-label {
+.progress-row {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 12px;
-}
-select,
-input[type="number"] {
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  padding: 4px 6px;
-  font-size: 12px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 6px;
 }
 .btn {
   padding: 8px 18px;
@@ -108,16 +63,11 @@ input[type="number"] {
   color: white;
   font-size: 13px;
   cursor: pointer;
+  white-space: nowrap;
 }
 .btn:disabled {
   opacity: 0.6;
   cursor: default;
-}
-.progress-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
 }
 .progress {
   display: flex;

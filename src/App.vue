@@ -2,48 +2,74 @@
   <Splash v-if="loading" />
 
   <div v-else class="app">
-    <HeaderBar />
+    <div class="shell">
+      <header class="hero">
+        <div class="hero-left">
+          <div class="pill">LavenderDragonDesign · Browser Upscaler</div>
+          <h1>Sharpen your art without leaving the browser.</h1>
+          <p>
+            Pick an LDD Crystal or Emerald engine, drop in your image, and get
+            upscale-ready files for Etsy, POD, and print in seconds.
+          </p>
+        </div>
+        <div class="hero-right">
+          <div class="stat-card">
+            <div class="stat-value">100%</div>
+            <div class="stat-label">Client-side</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">4×</div>
+            <div class="stat-label">Max upscale</div>
+          </div>
+        </div>
+      </header>
 
-    <main class="layout">
-      <section class="left">
-        <ImageDropzone
-          :file="file"
-          @file-change="onFileChange"
-          :busy="busy"
-        />
+      <main class="layout">
+        <section class="left">
+          <div class="card-header">
+            <h2>1. Load your image</h2>
+            <span>PNG / JPG · Up to a few thousand pixels is fine.</span>
+          </div>
 
-        <ControlsPanel
-          :modelKey="modelKey"
-          :backend="backend"
-          :scale="scale"
-          :tileSize="tileSize"
-          :overlap="overlap"
-          @update:modelKey="val => (modelKey = val)"
-          @update:backend="val => (backend = val)"
-          @update:scale="val => (scale = val)"
-          @update:tileSize="val => (tileSize = val)"
-          @update:overlap="val => (overlap = val)"
-          @upscale="handleUpscale"
-          :busy="busy"
-          :progress="progress"
-        />
-      </section>
+          <ImageDropzone
+            :file="file"
+            @file-change="onFileChange"
+            :busy="busy"
+          />
 
-      <section class="right">
-        <PreviewPane :inputUrl="inputUrl" :outputUrl="outputUrl" />
-      </section>
-    </main>
+          <div class="card-header card-header--spacing">
+            <h2>2. Choose an engine</h2>
+            <span>Each engine is tuned for a different type of image.</span>
+          </div>
 
-    <footer class="footer">
-      LavenderDragonDesign · 100% client-side · MIT
-    </footer>
+          <ControlsPanel
+            :modelKey="modelKey"
+            :busy="busy"
+            :progress="progress"
+            @update:modelKey="val => (modelKey = val)"
+            @upscale="handleUpscale"
+          />
+        </section>
+
+        <section class="right">
+          <div class="card-header">
+            <h2>3. Compare before & after</h2>
+            <span>Zoom in to inspect linework, edges, and small text.</span>
+          </div>
+          <PreviewPane :inputUrl="inputUrl" :outputUrl="outputUrl" />
+        </section>
+      </main>
+
+      <footer class="footer">
+        LavenderDragonDesign · Built for Etsy & POD workflows · MIT Licensed
+      </footer>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import Splash from "./components/Splash.vue";
-import HeaderBar from "./components/HeaderBar.vue";
 import ImageDropzone from "./components/ImageDropzone.vue";
 import ControlsPanel from "./components/ControlsPanel.vue";
 import PreviewPane from "./components/PreviewPane.vue";
@@ -56,16 +82,12 @@ const inputUrl = ref<string | null>(null);
 const outputUrl = ref<string | null>(null);
 
 const modelKey = ref("realesrgan/general_plus-64");
-const backend = ref<"webgl" | "webgpu">("webgl");
-const scale = ref(4);
-const tileSize = ref(256);
-const overlap = ref(16);
 
 const busy = ref(false);
 const progress = ref(0);
 
 onMounted(() => {
-  setTimeout(() => (loading.value = false), 1200);
+  setTimeout(() => (loading.value = false), 900);
 });
 
 function onFileChange(newFile: File | null) {
@@ -89,9 +111,9 @@ async function handleUpscale() {
     const blob = await upscaleImage({
       file: file.value,
       modelKey: modelKey.value,
-      scale: scale.value,
-      tileSize: tileSize.value,
-      overlap: overlap.value,
+      scale: 4,
+      tileSize: 64,
+      overlap: 0,
       onProgress: p => (progress.value = p)
     });
 
@@ -114,34 +136,134 @@ async function handleUpscale() {
 .app {
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
-  background: radial-gradient(circle at top left, #d3c4ff 0, #ffffff 40%, #c7f5ff 100%);
-  color: #111827;
+  justify-content: center;
+  background:
+    radial-gradient(circle at top left, #e9d5ff 0, transparent 45%),
+    radial-gradient(circle at bottom right, #bae6fd 0, #ffffff 40%);
+  color: #0f172a;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
+
+.shell {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 20px 16px 28px;
+}
+
+/* HERO */
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 4px 4px 16px;
+}
+
+.hero-left h1 {
+  font-size: 26px;
+  font-weight: 700;
+  margin: 8px 0 6px;
+}
+
+.hero-left p {
+  font-size: 14px;
+  max-width: 520px;
+  opacity: 0.85;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  background: rgba(124, 58, 237, 0.08);
+  color: #6d28d9;
+  border: 1px solid rgba(129, 140, 248, 0.3);
+}
+
+.hero-right {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  padding: 10px 14px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+  text-align: center;
+  min-width: 80px;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.stat-label {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+/* MAIN LAYOUT */
+
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr);
-  gap: 20px;
-  padding: 24px;
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 1.02fr);
+  gap: 16px;
 }
+
 .left,
 .right {
-  background: rgba(255, 255, 255, 0.85);
-  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 20px;
   box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
-  padding: 16px;
+  padding: 16px 16px 18px;
   backdrop-filter: blur(18px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
+
+.card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.card-header h2 {
+  font-size: 14px;
+  font-weight: 600;
+}
+.card-header span {
+  font-size: 11px;
+  opacity: 0.7;
+}
+.card-header--spacing {
+  margin-top: 8px;
+}
+
+/* FOOTER */
+
 .footer {
   text-align: center;
   font-size: 12px;
-  padding: 12px;
+  padding: 14px 4px 0;
   opacity: 0.7;
 }
+
 @media (max-width: 900px) {
+  .hero {
+    flex-direction: column;
+  }
   .layout {
     grid-template-columns: 1fr;
+  }
+  .hero-right {
+    justify-content: flex-start;
   }
 }
 </style>
