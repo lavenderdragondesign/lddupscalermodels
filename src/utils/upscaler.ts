@@ -173,7 +173,6 @@ export async function upscaleImage(opts: UpscaleOptions): Promise<Blob> {
 
       tileTensor.dispose();
       output.dispose();
-      denorm.dispose();
 
       done++;
       if (onProgress) {
