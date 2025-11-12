@@ -30,9 +30,6 @@ function normalizeForce(img: tf.Tensor3D): tf.Tensor3D {
   });
 }
 
-function denormalize(img: tf.Tensor3D): tf.Tensor3D {
-  return tf.clipByValue(tf.mul(img, tf.scalar(255)), 0, 255);
-}
 
 // Always feed 64x64 patches to the model; infer scale from first patch output.
 export async function upscaleImage(opts: UpscaleOptions): Promise<Blob> {
@@ -146,11 +143,10 @@ export async function upscaleImage(opts: UpscaleOptions): Promise<Blob> {
         return y.squeeze() as tf.Tensor3D;
       })) as tf.Tensor3D;
 
-      const denorm = tf.tidy(() => denormalize(output));
-      const [outH, outW] = denorm.shape;
+      const [outH, outW] = output.shape;
 
       const outImageData = new ImageData(outW, outH);
-      const outBuffer = await tf.browser.toPixels(denorm);
+      const outBuffer = await tf.browser.toPixels(output);
       for (let i = 0; i < outBuffer.length; i++) {
         outImageData.data[i] = outBuffer[i];
       }
