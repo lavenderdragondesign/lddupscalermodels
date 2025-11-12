@@ -138,15 +138,17 @@ export async function upscaleImage(opts: UpscaleOptions): Promise<Blob> {
         return normalizeForce(t).expandDims(0); // [1,64,64,3]
       });
 
-      const output = (await tf.tidy(() => {
+      const rawOutput = (await tf.tidy(() => {
         const y = model.execute(tileTensor) as tf.Tensor4D;
         return y.squeeze() as tf.Tensor3D;
       })) as tf.Tensor3D;
 
+      const output = tf.clipByValue(rawOutput, 0, 1);
       const [outH, outW] = output.shape;
 
-      const outImageData = new ImageData(outW, outH);
+      const outImageData = new ImageData(outH ? outW : 0, outH || 0);
       const outBuffer = await tf.browser.toPixels(output);
+      rawOutput.dispose();
       for (let i = 0; i < outBuffer.length; i++) {
         outImageData.data[i] = outBuffer[i];
       }
