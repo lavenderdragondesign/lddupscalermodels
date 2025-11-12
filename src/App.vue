@@ -138,9 +138,9 @@ async function handleUpscale() {
   display: flex;
   justify-content: center;
   background:
-    radial-gradient(circle at top left, #e9d5ff 0, transparent 45%),
-    radial-gradient(circle at bottom right, #bae6fd 0, #ffffff 40%);
-  color: #0f172a;
+    radial-gradient(circle at top left, #060816 0, transparent 55%),
+    radial-gradient(circle at bottom right, #022c22 0, #020617 45%);
+  color: #e5e7eb;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -164,12 +164,13 @@ async function handleUpscale() {
   font-size: 26px;
   font-weight: 700;
   margin: 8px 0 6px;
+  color: #f9fafb;
 }
 
 .hero-left p {
   font-size: 14px;
   max-width: 520px;
-  opacity: 0.85;
+  opacity: 0.8;
 }
 
 .pill {
@@ -179,9 +180,9 @@ async function handleUpscale() {
   padding: 4px 10px;
   border-radius: 999px;
   font-size: 11px;
-  background: rgba(124, 58, 237, 0.08);
-  color: #6d28d9;
-  border: 1px solid rgba(129, 140, 248, 0.3);
+  background: rgba(147, 51, 234, 0.22);
+  color: #e9d5ff;
+  border: 1px solid rgba(129, 140, 248, 0.6);
 }
 
 .hero-right {
@@ -191,22 +192,24 @@ async function handleUpscale() {
 }
 
 .stat-card {
-  background: rgba(255, 255, 255, 0.9);
+  background: radial-gradient(circle at top left, #1f2937 0, #020617 75%);
   border-radius: 18px;
   padding: 10px 14px;
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
   text-align: center;
   min-width: 80px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
 }
 
 .stat-value {
   font-size: 20px;
   font-weight: 700;
+  color: #e5e7eb;
 }
 
 .stat-label {
   font-size: 11px;
-  opacity: 0.7;
+  opacity: 0.75;
 }
 
 /* MAIN LAYOUT */
@@ -219,14 +222,15 @@ async function handleUpscale() {
 
 .left,
 .right {
-  background: rgba(255, 255, 255, 0.96);
+  background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.88));
   border-radius: 20px;
-  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.8);
   padding: 16px 16px 18px;
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(20px);
   display: flex;
   flex-direction: column;
   gap: 12px;
+  border: 1px solid rgba(30, 64, 175, 0.6);
 }
 
 .card-header {
@@ -237,10 +241,12 @@ async function handleUpscale() {
 .card-header h2 {
   font-size: 14px;
   font-weight: 600;
+  color: #f9fafb;
 }
 .card-header span {
   font-size: 11px;
   opacity: 0.7;
+  color: #cbd5f5;
 }
 .card-header--spacing {
   margin-top: 8px;
@@ -253,6 +259,7 @@ async function handleUpscale() {
   font-size: 12px;
   padding: 14px 4px 0;
   opacity: 0.7;
+  color: #9ca3af;
 }
 
 @media (max-width: 900px) {

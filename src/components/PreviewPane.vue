@@ -39,11 +39,12 @@ defineProps<{
 .label {
   font-size: 12px;
   font-weight: 600;
+  color: #e5e7eb;
 }
 .image-box {
   border-radius: 12px;
-  border: 1px solid #e5e7eb;
-  background: #f9fafb;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: radial-gradient(circle at top left, #020617, #020617 55%, #030712 100%);
   min-height: 220px;
   overflow: auto;
   display: flex;
@@ -56,6 +57,7 @@ defineProps<{
 .placeholder {
   font-size: 12px;
   opacity: 0.7;
+  color: #9ca3af;
 }
 @media (max-width: 900px) {
   .preview {

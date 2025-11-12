@@ -69,11 +69,12 @@ function clear() {
 <style scoped>
 .dropzone {
   border-radius: 14px;
-  border: 1px dashed #cbd5f5;
+  border: 1px dashed rgba(148, 163, 184, 0.7);
   padding: 16px;
   text-align: center;
-  background: rgba(248, 250, 252, 0.9);
+  background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.8));
   position: relative;
+  color: #e5e7eb;
 }
 .dropzone--busy {
   opacity: 0.5;
@@ -96,12 +97,17 @@ function clear() {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  font-size: 12px;
 }
 .clear {
   padding: 4px 10px;
   font-size: 12px;
   border-radius: 999px;
-  border: 1px solid #e5e7eb;
-  background: white;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: #020617;
+  color: #e5e7eb;
+}
+.clear:hover {
+  background: #0f172a;
 }
 </style>

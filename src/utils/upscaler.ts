@@ -3,7 +3,7 @@ import * as tf from "@tensorflow/tfjs";
 export interface UpscaleOptions {
   file: File;
   modelKey: string;
-  tileSize: number; // ignored, kept for signature compatibility
+  tileSize: number; // kept for signature compatibility, ignored
   overlap: number;  // ignored
   scale: number;    // hint only, actual scale inferred from model
   onProgress?: (p: number) => void;
@@ -21,13 +21,16 @@ async function loadModel(modelKey: string): Promise<tf.GraphModel> {
   return model;
 }
 
-function normalize(img: tf.Tensor3D): tf.Tensor3D {
-  // 0–255 → 0–1
-  return tf.div(img, tf.scalar(255));
+// Force 0–1 float range safely, even if input is already float or comes from odd ImageData.
+function normalizeForce(img: tf.Tensor3D): tf.Tensor3D {
+  return tf.tidy(() => {
+    const f = img.toFloat();
+    const divided = tf.div(f, tf.scalar(255));
+    return tf.clipByValue(divided, 0, 1);
+  });
 }
 
 function denormalize(img: tf.Tensor3D): tf.Tensor3D {
-  // 0–1 → 0–255
   return tf.clipByValue(tf.mul(img, tf.scalar(255)), 0, 255);
 }
 
@@ -48,10 +51,10 @@ export async function upscaleImage(opts: UpscaleOptions): Promise<Blob> {
     ? new OffscreenCanvas(width, height)
     : document.createElement("canvas");
 
-  const inputCtx = inputCanvas.getContext("2d");
+  const inputCtx = inputCanvas.getContext("2d", { willReadFrequently: true } as any);
   if (!inputCtx) throw new Error("2D context not available");
-  inputCanvas.width = width;
-  inputCanvas.height = height;
+  (inputCanvas as any).width = width;
+  (inputCanvas as any).height = height;
   inputCtx.drawImage(imgBitmap, 0, 0, width, height);
 
   // Determine patch scale using a single test patch at (0,0)
@@ -65,17 +68,16 @@ export async function upscaleImage(opts: UpscaleOptions): Promise<Blob> {
     const paddedCanvas = (typeof OffscreenCanvas !== "undefined")
       ? new OffscreenCanvas(PATCH, PATCH)
       : document.createElement("canvas");
-    const paddedCtx = paddedCanvas.getContext("2d")!;
-    paddedCanvas.width = PATCH;
-    paddedCanvas.height = PATCH;
+    const paddedCtx = paddedCanvas.getContext("2d", { willReadFrequently: true } as any)!;
+    (paddedCanvas as any).width = PATCH;
+    (paddedCanvas as any).height = PATCH;
     paddedCtx.clearRect(0, 0, PATCH, PATCH);
     paddedCtx.putImageData(srcData, 0, 0);
 
     const patchData = paddedCtx.getImageData(0, 0, PATCH, PATCH);
     const patchTensor = tf.tidy(() => {
       const t = tf.browser.fromPixels(patchData) as tf.Tensor3D;
-      const norm = normalize(t);
-      return norm.expandDims(0); // [1,64,64,3]
+      return normalizeForce(t).expandDims(0); // [1,64,64,3]
     });
 
     const out = await tf.tidy(() => {
@@ -99,10 +101,10 @@ export async function upscaleImage(opts: UpscaleOptions): Promise<Blob> {
   const outCanvas = (typeof OffscreenCanvas !== "undefined")
     ? new OffscreenCanvas(outWidth, outHeight)
     : document.createElement("canvas");
-  const outCtx = outCanvas.getContext("2d");
+  const outCtx = outCanvas.getContext("2d", { willReadFrequently: false } as any);
   if (!outCtx) throw new Error("2D context not available");
-  outCanvas.width = outWidth;
-  outCanvas.height = outHeight;
+  (outCanvas as any).width = outWidth;
+  (outCanvas as any).height = outHeight;
 
   const tilesX = Math.ceil(width / PATCH);
   const tilesY = Math.ceil(height / PATCH);
@@ -126,9 +128,9 @@ export async function upscaleImage(opts: UpscaleOptions): Promise<Blob> {
       const paddedCanvas = (typeof OffscreenCanvas !== "undefined")
         ? new OffscreenCanvas(PATCH, PATCH)
         : document.createElement("canvas");
-      const paddedCtx = paddedCanvas.getContext("2d")!;
-      paddedCanvas.width = PATCH;
-      paddedCanvas.height = PATCH;
+      const paddedCtx = paddedCanvas.getContext("2d", { willReadFrequently: true } as any)!;
+      (paddedCanvas as any).width = PATCH;
+      (paddedCanvas as any).height = PATCH;
       paddedCtx.clearRect(0, 0, PATCH, PATCH);
       paddedCtx.putImageData(srcData, 0, 0);
 
@@ -136,8 +138,7 @@ export async function upscaleImage(opts: UpscaleOptions): Promise<Blob> {
 
       const tileTensor = tf.tidy(() => {
         const t = tf.browser.fromPixels(patchData) as tf.Tensor3D;
-        const norm = normalize(t);
-        return norm.expandDims(0); // [1,64,64,3]
+        return normalizeForce(t).expandDims(0); // [1,64,64,3]
       });
 
       const output = (await tf.tidy(() => {
@@ -165,9 +166,9 @@ export async function upscaleImage(opts: UpscaleOptions): Promise<Blob> {
       const patchCanvasOut = (typeof OffscreenCanvas !== "undefined")
         ? new OffscreenCanvas(outW, outH)
         : document.createElement("canvas");
-      const patchCtxOut = patchCanvasOut.getContext("2d")!;
-      patchCanvasOut.width = outW;
-      patchCanvasOut.height = outH;
+      const patchCtxOut = patchCanvasOut.getContext("2d", { willReadFrequently: false } as any)!;
+      (patchCanvasOut as any).width = outW;
+      (patchCanvasOut as any).height = outH;
       patchCtxOut.putImageData(outImageData, 0, 0);
 
       outCtx.drawImage(patchCanvasOut, dx, dy);
@@ -190,9 +191,9 @@ export async function upscaleImage(opts: UpscaleOptions): Promise<Blob> {
   const finalCanvas = (typeof OffscreenCanvas !== "undefined")
     ? new OffscreenCanvas(finalW, finalH)
     : document.createElement("canvas");
-  const finalCtx = finalCanvas.getContext("2d")!;
-  finalCanvas.width = finalW;
-  finalCanvas.height = finalH;
+  const finalCtx = finalCanvas.getContext("2d", { willReadFrequently: false } as any)!;
+  (finalCanvas as any).width = finalW;
+  (finalCanvas as any).height = finalH;
   finalCtx.drawImage(outCanvas, 0, 0, finalW, finalH, 0, 0, finalW, finalH);
 
   const blob: Blob = await (finalCanvas as any).convertToBlob
