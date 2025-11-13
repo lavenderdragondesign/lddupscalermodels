@@ -17,7 +17,7 @@
             <img :src="outputUrl" alt="Upscaled image" class="img-base" />
 
             <!-- Original image clipped to slider position -->
-            <div class="img-overlay" :style="{ width: sliderPos + '%' }">
+            <div class="img-overlay" :style="{ clipPath: `inset(0 ${100}-sliderPos + '%' 0 0)` }">
               <img :src="inputUrl" alt="Original image" />
             </div>
           </div>
@@ -167,6 +167,8 @@ function download() {
 .img-overlay {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   pointer-events: none;
 }
