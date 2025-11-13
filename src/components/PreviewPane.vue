@@ -17,7 +17,7 @@
             <div
               class="img-overlay"
               :style="{
-                clipPath: `inset(0 ${(100 - sliderPos).toFixed(1)}% 0 0)`
+                clipPath: `inset(0 ${100 - sliderPos}% 0 0)`
               }"
             >
               <img :src="inputUrl" alt="Original image" />
@@ -143,7 +143,7 @@ const sliderPos = ref(50);
 .single-img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   display: block;
 }
 
@@ -193,7 +193,7 @@ const sliderPos = ref(50);
 .img-overlay img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   display: block;
 }
 
