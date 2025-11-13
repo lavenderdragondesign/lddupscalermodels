@@ -10,7 +10,10 @@
         @click="$emit('update:modelKey', engine.key)"
       >
         <div class="engine-main">
-          <div class="engine-name">{{ engine.name }}</div>
+          <div class="engine-name">
+            {{ engine.name }}
+            <span v-if="engine.recommended" class="engine-badge">Recommended</span>
+          </div>
           <div class="engine-tagline">{{ engine.tagline }}</div>
         </div>
         <div class="engine-family">{{ engine.family }}</div>
@@ -68,6 +71,7 @@ const engines = [
   {
     key: "realesrgan/general_plus-64",
     name: "LDD Crystal HD",
+    recommended: true,
     family: "Photo / Print",
     tagline: "Highest-quality engine for photos and print.",
     description: "Best choice for Etsy listings, product photos, and anything going to print. Slower, but sharper and cleaner."
@@ -82,6 +86,7 @@ const engines = [
   {
     key: "realesrgan/anime_plus-64",
     name: "LDD Crystal Linework Pro",
+    recommended: true,
     family: "Detailed Line Art",
     tagline: "Max clarity for line art and illustration.",
     description: "Use this when your art has a lot of fine lines: manga-style work, detailed doodles, icons, and illustrational assets."

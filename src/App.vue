@@ -69,10 +69,13 @@
       <transition name="fade-pop">
         <div v-if="showDownloadPopup" class="download-popup">
           <div class="download-card">
-            <div class="download-title">PNG downloaded</div>
+            <div class="download-title">PNG ready to download</div>
             <p class="download-body">
-              Your upscaled image has been saved as <strong>ldd-upscaled.png</strong>.
+              Your upscaled image is ready. Click below to save <strong>ldd-upscaled.png</strong> and start a new image.
             </p>
+            <button type="button" class="download-action" @click="handleDownloadAndReset">
+              Download PNG &amp; start over
+            </button>
           </div>
         </div>
       </transition>
@@ -115,7 +118,7 @@ const file = ref<File | null>(null);
 const inputUrl = ref<string | null>(null);
 const outputUrl = ref<string | null>(null);
 
-const modelKey = ref("realesrgan/general_plus-64");
+const modelKey = ref("realesrgan/anime_plus-64");
 
 const busy = ref(false);
 const progress = ref(0);
@@ -159,6 +162,33 @@ function onFileChange(newFile: File | null) {
 function triggerDownloadPopup() {
   showDownloadPopup.value = true;
   // auto-hide disabled
+}
+
+
+function handleDownloadAndReset() {
+  if (!outputUrl.value) return;
+
+  const a = document.createElement("a");
+  a.href = outputUrl.value;
+  a.download = "ldd-upscaled.png";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  showDownloadPopup.value = false;
+
+  // reset state so user can start fresh
+  file.value = null;
+  inputUrl.value = null;
+
+  if (outputUrl.value) {
+    URL.revokeObjectURL(outputUrl.value);
+  }
+  outputUrl.value = null;
+  progress.value = 0;
+  etaText.value = null;
+  busy.value = false;
+  startTime.value = null;
 }
 
 async function handleUpscale() {
@@ -389,6 +419,10 @@ async function handleUpscale() {
 }
 
 .download-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
   background: #ffffff;
   color: #020617;
   padding: 12px 16px;
@@ -405,6 +439,23 @@ async function handleUpscale() {
 
 .download-body strong {
   font-weight: 600;
+}
+
+.download-action {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  background: #111827;
+  color: #f9fafb;
+  cursor: pointer;
+}
+
+.download-action:hover {
+  background: #020617;
 }
 
 /* simple fade+scale transition */
