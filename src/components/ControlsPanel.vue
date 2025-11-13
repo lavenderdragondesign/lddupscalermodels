@@ -6,6 +6,7 @@
         :key="engine.key"
         type="button"
         class="engine-btn"
+        <div v-if="engine.recommended" class="engine-rec">⭐ Recommended</div>
         :class="{ 'engine-btn--active': engine.key === modelKey }"
         @click="$emit('update:modelKey', engine.key)"
       >
@@ -109,6 +110,21 @@ const engines = [
 </script>
 
 <style scoped>
+.engine-rec {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 9px;
+  background: rgba(34,197,94,0.2);
+  color: #bbf7d0;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(34,197,94,0.6);
+}
+.engine-btn {
+  position: relative;
+}
+
 .panel {
   margin-top: 8px;
   display: flex;
