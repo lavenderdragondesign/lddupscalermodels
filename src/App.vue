@@ -2,6 +2,7 @@
   <Splash v-if="loading" />
 
   <div v-else class="app">
+    <HeaderBar />
     <div class="shell">
       <header class="hero">
         <div class="hero-left">
@@ -70,6 +71,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import Splash from "./components/Splash.vue";
+import HeaderBar from "./components/HeaderBar.vue";
 import ImageDropzone from "./components/ImageDropzone.vue";
 import ControlsPanel from "./components/ControlsPanel.vue";
 import PreviewPane from "./components/PreviewPane.vue";
