@@ -2,7 +2,6 @@
   <Splash v-if="loading" />
 
   <div v-else class="app">
-    <HeaderBar />
     <div class="shell">
       <header class="hero">
         <div class="hero-left">
@@ -71,7 +70,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import Splash from "./components/Splash.vue";
-import HeaderBar from "./components/HeaderBar.vue";
 import ImageDropzone from "./components/ImageDropzone.vue";
 import ControlsPanel from "./components/ControlsPanel.vue";
 import PreviewPane from "./components/PreviewPane.vue";
@@ -232,6 +230,7 @@ async function handleUpscale() {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  position: relative;
   border: 1px solid rgba(30, 64, 175, 0.6);
 }
 
@@ -262,6 +261,16 @@ async function handleUpscale() {
   padding: 14px 4px 0;
   opacity: 0.7;
   color: #9ca3af;
+}
+
+
+
+.left {
+  z-index: 2;
+}
+
+.right {
+  z-index: 1;
 }
 
 @media (max-width: 900px) {
