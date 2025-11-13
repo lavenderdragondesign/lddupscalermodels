@@ -72,7 +72,7 @@
             LavenderDragonDesign · Built for Etsy & POD workflows · MIT Licensed ·
           </span>
           <a :href="etsyLinkURL" target="_blank" rel="noreferrer" class="footer-link">
-            Visit Etsy shop
+            <img :src="etsyIconURL" alt="Etsy" class="footer-etsy-icon" />
           </a>
           <a :href="bmcLinkURL" target="_blank" rel="noreferrer" class="footer-bmc">
             <img :src="bmcImageURL" alt="Buy Me a Coffee" />
@@ -95,6 +95,7 @@ const logoURL = "https://i.postimg.cc/y6M6KPZ5/logo.jpg";
 const bmcImageURL = "https://i.postimg.cc/28YhHbfZ/bmc-button.png";
 const bmcLinkURL = "https://buymeacoffee.com/lavenderdragondesign";
 const etsyLinkURL = "https://www.etsy.com/shop/LavenderDragonDesign";
+const etsyIconURL = "https://img.icons8.com/?size=100&id=MQ-HLKLCGrJn&format=png&color=000000";
 
 const loading = ref(true);
 
@@ -209,6 +210,7 @@ async function handleUpscale() {
   display: flex;
   flex-direction: column;
 }
+
 /* HERO */
 
 .hero {
@@ -292,6 +294,14 @@ async function handleUpscale() {
   border: 1px solid rgba(30, 64, 175, 0.6);
 }
 
+.left {
+  z-index: 2;
+}
+
+.right {
+  z-index: 1;
+}
+
 .card-header {
   display: flex;
   flex-direction: column;
@@ -340,12 +350,13 @@ async function handleUpscale() {
 }
 
 .footer-link {
-  color: #93c5fd;
   text-decoration: none;
 }
 
-.footer-link:hover {
-  text-decoration: underline;
+.footer-etsy-icon {
+  height: 22px;
+  width: 22px;
+  object-fit: contain;
 }
 
 .footer-bmc img {
@@ -353,16 +364,6 @@ async function handleUpscale() {
   display: block;
 }
 
-
-
-
-.left {
-  z-index: 2;
-}
-
-.right {
-  z-index: 1;
-}
 
 @media (max-width: 900px) {
   .hero {
