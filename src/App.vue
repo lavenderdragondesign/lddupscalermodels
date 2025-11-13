@@ -188,7 +188,6 @@ function handleDevLogout() {
 const inputUrl = ref<string | null>(null);
 const outputUrl = ref<string | null>(null);
 
-const modelKey = ref("realesrgan/anime_plus-64");
 
 const busy = ref(false);
 const progress = ref(0);
@@ -316,8 +315,7 @@ async function handleUpscale() {
     etaText.value = null;
     startTime.value = null;
   }
-}
-</script>
+}</script>
 
 <style scoped>
 
