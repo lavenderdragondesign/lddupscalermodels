@@ -5,7 +5,12 @@
     <div class="shell">
       <header class="hero">
         <div class="hero-left">
-          <div class="pill">LavenderDragonDesign · Browser Upscaler</div>
+          <div class="hero-brand">
+            <img :src="logoURL" alt="LavenderDragonDesign logo" class="hero-logo" />
+            <div class="hero-brand-text">
+              <div class="pill">LavenderDragonDesign · Browser Upscaler</div>
+            </div>
+          </div>
           <h1>Sharpen your art without leaving the browser.</h1>
           <p>
             Pick an LDD Crystal or Emerald engine, drop in your image, and get
@@ -61,7 +66,18 @@
       </main>
 
       <footer class="footer">
-        LavenderDragonDesign · Built for Etsy & POD workflows · MIT Licensed
+        <div class="footer-inner">
+          <img :src="logoURL" alt="LavenderDragonDesign logo" class="footer-logo" />
+          <span class="footer-text">
+            LavenderDragonDesign · Built for Etsy & POD workflows · MIT Licensed ·
+          </span>
+          <a :href="etsyLinkURL" target="_blank" rel="noreferrer" class="footer-link">
+            Visit Etsy shop
+          </a>
+          <a :href="bmcLinkURL" target="_blank" rel="noreferrer" class="footer-bmc">
+            <img :src="bmcImageURL" alt="Buy Me a Coffee" />
+          </a>
+        </div>
       </footer>
     </div>
   </div>
@@ -74,6 +90,11 @@ import ImageDropzone from "./components/ImageDropzone.vue";
 import ControlsPanel from "./components/ControlsPanel.vue";
 import PreviewPane from "./components/PreviewPane.vue";
 import { upscaleImage } from "./utils/upscaler";
+
+const logoURL = "https://i.postimg.cc/y6M6KPZ5/logo.jpg";
+const bmcImageURL = "https://i.postimg.cc/28YhHbfZ/bmc-button.png";
+const bmcLinkURL = "https://buymeacoffee.com/lavenderdragondesign";
+const etsyLinkURL = "https://www.etsy.com/shop/LavenderDragonDesign";
 
 const loading = ref(true);
 
@@ -168,6 +189,26 @@ async function handleUpscale() {
   padding: 20px 16px 28px;
 }
 
+
+.hero-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.hero-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85);
+  flex-shrink: 0;
+}
+
+.hero-brand-text {
+  display: flex;
+  flex-direction: column;
+}
 /* HERO */
 
 .hero {
@@ -279,6 +320,39 @@ async function handleUpscale() {
   opacity: 0.7;
   color: #9ca3af;
 }
+.footer-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.footer-logo {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.75);
+}
+
+.footer-text {
+  white-space: nowrap;
+}
+
+.footer-link {
+  color: #93c5fd;
+  text-decoration: none;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
+}
+
+.footer-bmc img {
+  height: 26px;
+  display: block;
+}
+
 
 
 

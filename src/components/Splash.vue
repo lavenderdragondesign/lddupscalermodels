@@ -1,9 +1,13 @@
+<script setup lang="ts">
+const logoURL = "https://i.postimg.cc/y6M6KPZ5/logo.jpg";
+</script>
+
 <template>
   <div class="splash">
     <div class="glow-orb"></div>
     <div class="card">
       <div class="logo-row">
-        <img src="/ldd-logo.png" alt="LavenderDragonDesign logo" class="logo" />
+        <img :src="logoURL" alt="LavenderDragonDesign logo" class="logo" />
       </div>
       <div class="badge">LavenderDragonDesign · Upscaler</div>
       <div class="title">Warming up your engines…</div>
