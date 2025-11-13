@@ -66,6 +66,17 @@
         </section>
       </main>
 
+      <transition name="fade-pop">
+        <div v-if="showDownloadPopup" class="download-popup">
+          <div class="download-card">
+            <div class="download-title">PNG downloaded</div>
+            <p class="download-body">
+              Your upscaled image has been saved as <strong>ldd-upscaled.png</strong>.
+            </p>
+          </div>
+        </div>
+      </transition>
+
       <footer class="footer">
         <div class="footer-inner">
           <img :src="logoURL" alt="LavenderDragonDesign logo" class="footer-logo" />
@@ -110,6 +121,8 @@ const busy = ref(false);
 const progress = ref(0);
 const etaText = ref<string | null>(null);
 const startTime = ref<number | null>(null);
+const showDownloadPopup = ref(false);
+let downloadPopupTimeout: number | null = null;
 
 onMounted(() => {
   try {
@@ -141,6 +154,11 @@ function onFileChange(newFile: File | null) {
   } else {
     inputUrl.value = null;
   }
+}
+
+function triggerDownloadPopup() {
+  showDownloadPopup.value = true;
+  // auto-hide disabled
 }
 
 async function handleUpscale() {
@@ -184,7 +202,11 @@ async function handleUpscale() {
       URL.revokeObjectURL(outputUrl.value);
     }
 
-    outputUrl.value = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blob);
+    outputUrl.value = url;
+
+    // Auto-download PNG
+    showDownloadPopup.value = true;
   } catch (err) {
     console.error(err);
     alert("Upscale failed. Check console for details.");
@@ -357,6 +379,46 @@ async function handleUpscale() {
   opacity: 0.95;
   color: #e5e7eb;
 }
+
+.download-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 40;
+}
+
+.download-card {
+  background: #ffffff;
+  color: #020617;
+  padding: 12px 16px;
+  border-radius: 16px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.65);
+  max-width: 260px;
+  font-size: 13px;
+}
+
+.download-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.download-body strong {
+  font-weight: 600;
+}
+
+/* simple fade+scale transition */
+.fade-pop-enter-active,
+.fade-pop-leave-active {
+  transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+}
+
+.fade-pop-enter-from,
+.fade-pop-leave-to {
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+}
+
 .footer-inner {
   display: inline-flex;
   align-items: center;

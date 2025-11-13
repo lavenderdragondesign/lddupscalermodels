@@ -32,7 +32,7 @@
           <div class="divider" :style="{ left: sliderPos + '%' }">
             <div class="divider-line"></div>
             <div class="handle">
-              <span>⇆</span>
+              <span>←→</span>
             </div>
           </div>
 
@@ -61,14 +61,7 @@
         <p>Load an image on the left to begin.</p>
       </div>
 
-      <button
-        v-if="outputUrl"
-        type="button"
-        class="download-btn"
-        @click="download"
-      >
-        Download Upscaled PNG
-      </button>
+
     </section>
   </div>
 </template>
@@ -85,15 +78,6 @@ const props = defineProps<{
 
 const sliderPos = ref(50);
 
-function download() {
-  if (!props.outputUrl) return;
-  const a = document.createElement("a");
-  a.href = props.outputUrl;
-  a.download = "ldd-upscaled.png";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-}
 </script>
 
 <style scoped>
