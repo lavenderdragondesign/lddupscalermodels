@@ -11,10 +11,10 @@
               <div class="pill">LavenderDragonDesign's Image Upscaler</div>
             </div>
           </div>
-          <h1>Upscale your art for Etsy without leaving the browser.</h1>
+          <h1>Upscale your images in the browser, fast and free.</h1>
           <p>
-            LDD Crystal &amp; Emerald engines give you clean 4× upscales, fully client-side,
-            perfect for product photos, PNG bundles, and print-on-demand workflows.
+            LDD Crystal &amp; Emerald engines give you high-quality 4× upscales, 100% client-side,
+            with no logins, uploads, or watermarks.
           </p>
         </div>
         <div class="hero-right">
@@ -51,6 +51,7 @@
             :modelKey="modelKey"
             :busy="busy"
             :progress="progress"
+            :etaText="etaText"
             @update:modelKey="val => (modelKey = val)"
             @upscale="handleUpscale"
           />
@@ -69,7 +70,7 @@
         <div class="footer-inner">
           <img :src="logoURL" alt="LavenderDragonDesign logo" class="footer-logo" />
           <span class="footer-text">
-            LavenderDragonDesign · Built for Etsy & POD workflows · MIT Licensed ·
+            LavenderDragonDesign · Free browser image upscaler · MIT Licensed ·
           </span>
           <a :href="etsyLinkURL" target="_blank" rel="noreferrer" class="footer-link">
             <img :src="etsyIconURL" alt="Etsy" class="footer-etsy-icon" />
@@ -107,6 +108,8 @@ const modelKey = ref("realesrgan/general_plus-64");
 
 const busy = ref(false);
 const progress = ref(0);
+const etaText = ref<string | null>(null);
+const startTime = ref<number | null>(null);
 
 onMounted(() => {
   try {
@@ -145,6 +148,8 @@ async function handleUpscale() {
 
   busy.value = true;
   progress.value = 0;
+  etaText.value = null;
+  startTime.value = performance.now();
 
   try {
     const blob = await upscaleImage({
@@ -153,7 +158,26 @@ async function handleUpscale() {
       scale: 4,
       tileSize: 64,
       overlap: 0,
-      onProgress: p => (progress.value = p)
+      onProgress: p => {
+        progress.value = p;
+        if (startTime.value != null && p > 0 && p < 100) {
+          const elapsedSec = (performance.now() - startTime.value) / 1000;
+          if (elapsedSec > 0) {
+            const rate = p / elapsedSec; // percent per second
+            if (rate > 0.01) {
+              const remainingSec = (100 - p) / rate;
+              const clamped = Math.max(1, Math.min(remainingSec, 60 * 30));
+              const mins = Math.floor(clamped / 60);
+              const secs = Math.round(clamped % 60);
+              if (mins > 0) {
+                etaText.value = `${mins}m ${secs}s`;
+              } else {
+                etaText.value = `${secs}s`;
+              }
+            }
+          }
+        }
+      }
     });
 
     if (outputUrl.value) {
@@ -167,6 +191,8 @@ async function handleUpscale() {
   } finally {
     busy.value = false;
     progress.value = 0;
+    etaText.value = null;
+    startTime.value = null;
   }
 }
 </script>
@@ -328,8 +354,8 @@ async function handleUpscale() {
   text-align: center;
   font-size: 12px;
   padding: 14px 4px 0;
-  opacity: 0.7;
-  color: #9ca3af;
+  opacity: 0.95;
+  color: #e5e7eb;
 }
 .footer-inner {
   display: inline-flex;

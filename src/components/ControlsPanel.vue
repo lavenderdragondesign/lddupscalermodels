@@ -36,6 +36,7 @@
           <img :src="logoURL" alt="LavenderDragonDesign logo" class="spinner-logo" />
         </div>
         <span class="percent">{{ progress.toFixed(0) }}%</span>
+        <span v-if="etaText" class="eta">~{{ etaText }} left</span>
       </div>
     </div>
   </div>
@@ -46,6 +47,7 @@ const props = defineProps<{
   modelKey: string;
   busy: boolean;
   progress: number;
+  etaText: string | null;
 }>();
 
 defineEmits<{
