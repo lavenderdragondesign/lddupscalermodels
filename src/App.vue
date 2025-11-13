@@ -67,18 +67,20 @@
       </main>
 
       <transition name="fade-pop">
-        <div v-if="showDownloadPopup" class="download-popup">
-          <div class="download-card">
-            <div class="download-title">PNG ready to download</div>
-            <p class="download-body">
-              Your upscaled image is ready. Click below to save <strong>ldd-upscaled.png</strong> and start a new image.
-            </p>
-            <button type="button" class="download-action" @click="handleDownloadAndReset">
-              Download PNG &amp; start over
-            </button>
-          </div>
-        </div>
-      </transition>
+  <div v-if="showDownloadPopup" class="download-popup">
+    <div class="download-card">
+      <div class="download-title">Upscale Complete!</div>
+
+      <p class="download-body">
+        Your high-quality PNG is ready. Tap below to download and reset for your next image.
+      </p>
+
+      <button type="button" class="download-action" @click="handleDownloadAndReset">
+        Download &amp; Start New
+      </button>
+    </div>
+  </div>
+</transition>
 
       <footer class="footer">
         <div class="footer-inner">
