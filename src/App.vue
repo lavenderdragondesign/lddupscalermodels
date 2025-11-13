@@ -11,10 +11,10 @@
               <div class="pill">LavenderDragonDesign · Browser Upscaler</div>
             </div>
           </div>
-          <h1>Sharpen your art without leaving the browser.</h1>
+          <h1>Upscale your art for Etsy without leaving the browser.</h1>
           <p>
-            Pick an LDD Crystal or Emerald engine, drop in your image, and get
-            upscale-ready files for Etsy, POD, and print in seconds.
+            LDD Crystal &amp; Emerald engines give you clean 4× upscales, fully client-side,
+            perfect for product photos, PNG bundles, and print-on-demand workflows.
           </p>
         </div>
         <div class="hero-right">

@@ -30,11 +30,12 @@
         <span v-else>Upscale image</span>
       </button>
 
-      <div v-if="busy" class="progress">
-        <div class="bar">
-          <div class="fill" :style="{ width: progress + '%' }"></div>
+      <div v-if="busy" class="progress progress--spinner">
+        <div class="spinner">
+          <div class="spinner-glow"></div>
+          <img :src="logoURL" alt="LavenderDragonDesign logo" class="spinner-logo" />
         </div>
-        <span class="label">{{ progress.toFixed(0) }}%</span>
+        <span class="percent">{{ progress.toFixed(0) }}%</span>
       </div>
     </div>
   </div>
@@ -51,6 +52,8 @@ defineEmits<{
   "update:modelKey": [string];
   upscale: [];
 }>();
+
+const logoURL = "https://i.postimg.cc/y6M6KPZ5/logo.jpg";
 
 const engines = [
   {
@@ -197,40 +200,86 @@ const engines = [
 }
 
 .btn {
-  padding: 8px 18px;
+  padding: 10px 26px;
   border-radius: 999px;
   border: none;
-  background: linear-gradient(90deg, #a855f7, #22c55e);
+  background: #a855f7;
   color: white;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
+  box-shadow: 0 16px 40px rgba(88, 28, 135, 0.6);
 }
+
 .btn:disabled {
   opacity: 0.6;
   cursor: default;
 }
+
 .progress {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
   flex: 1;
+  justify-content: flex-end;
 }
-.bar {
-  flex: 1;
-  height: 6px;
+
+.progress--spinner {
+  justify-content: flex-end;
+}
+
+.spinner {
+  position: relative;
+  width: 34px;
+  height: 34px;
+}
+
+.spinner-glow {
+  position: absolute;
+  inset: 0;
   border-radius: 999px;
-  background: #e5e7eb;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.35), transparent 60%);
+  box-shadow: 0 0 18px rgba(168, 85, 247, 0.9);
+  animation: spinner-pulse 1.4s ease-in-out infinite;
 }
-.fill {
-  height: 100%;
-  background: linear-gradient(90deg, #a855f7, #0ea5e9);
-  border-radius: inherit;
+
+.spinner-logo {
+  position: absolute;
+  inset: 4px;
+  border-radius: 999px;
+  animation: spinner-rotate 1.2s linear infinite;
 }
-.label {
-  font-size: 11px;
-  opacity: 0.8;
+
+.percent {
+  font-size: 15px;
+  font-weight: 600;
 }
+
+@keyframes spinner-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spinner-pulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+}
+
 
 @media (max-width: 900px) {
   .engine-grid {
