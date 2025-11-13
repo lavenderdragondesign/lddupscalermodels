@@ -3,7 +3,7 @@
   <div class="preview">
     <section class="pane single">
       <div class="pane-header">
-        <span class="pill">Before / After</span>
+        <span class="pill-label">Before / After</span>
         <span class="hint" v-if="inputUrl && outputUrl">Drag the handle to compare</span>
       </div>
 
@@ -77,7 +77,9 @@ function download() {
   const a = document.createElement("a");
   a.href = props.outputUrl;
   a.download = "ldd-upscaled.png";
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
 }
 </script>
 
@@ -107,7 +109,7 @@ function download() {
   margin-bottom: 10px;
 }
 
-.pill {
+.pill-label {
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -282,7 +284,6 @@ function download() {
   color: #f9fafb;
   cursor: pointer;
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.8);
-  animation: shimmer 5s linear infinite;
 }
 
 .download-btn:hover {

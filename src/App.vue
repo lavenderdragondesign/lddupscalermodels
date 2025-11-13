@@ -8,7 +8,7 @@
           <div class="hero-brand">
             <img :src="logoURL" alt="LavenderDragonDesign logo" class="hero-logo" />
             <div class="hero-brand-text">
-              <div class="pill">LavenderDragonDesign · Browser Upscaler</div>
+              <div class="pill">LavenderDragonDesign's Image Upscaler</div>
             </div>
           </div>
           <h1>Upscale your art for Etsy without leaving the browser.</h1>
@@ -236,13 +236,14 @@ async function handleUpscale() {
 .pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
+  gap: 8px;
+  padding: 7px 20px;
   border-radius: 999px;
-  font-size: 11px;
-  background: rgba(147, 51, 234, 0.22);
+  font-size: 14px;
+  letter-spacing: 0.03em;
+  background: rgba(147, 51, 234, 0.35);
   color: #e9d5ff;
-  border: 1px solid rgba(129, 140, 248, 0.6);
+  border: 1px solid rgba(129, 140, 248, 0.9);
 }
 
 .hero-right {
