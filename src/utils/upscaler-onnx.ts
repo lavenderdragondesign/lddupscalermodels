@@ -9,12 +9,10 @@ export interface UpscaleOptionsOnnx {
 
 // Map your modelKey strings to ONNX paths in /public
 const MODEL_URLS: Record<string, string> = {
-  "realesrgan/anime_plus-64": "/models/onnx_models/realesrgan/anime_plus-64.onnx",
-  "realesrgan/anime_fast-64": "/models/onnx_models/realesrgan/anime_fast-64.onnx",
-  "realesrgan/general_plus-64": "/models/onnx_models/realesrgan/general_plus-64.onnx",
-  "realesrgan/general_fast-64": "/models/onnx_models/realesrgan/general_fast-64.onnx",
-  "realcugan/2x-conservative-64": "/models/onnx_models/realcugan/2x-conservative-64.onnx",
-  "realcugan/4x-conservative-64": "/models/onnx_models/realcugan/4x-conservative-64.onnx",
+  "onnx/crystal-linework-x4": "/models/onnx_models/swin_unet/art/noise1_scale4x.onnx",
+  "onnx/nebula-hd-x4": "/models/onnx_models/swin_unet/photo/noise0_scale4x.onnx",
+  "onnx/diamond-clarity-x4": "/models/onnx_models/swin_unet/art_scan/noise2_scale4x.onnx",
+  "onnx/ember-studio-x2": "/models/onnx_models/cunet/art/noise0_scale2x.onnx",
 };
 
 const sessionCache = new Map<string, ort.InferenceSession>();

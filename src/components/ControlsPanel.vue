@@ -68,6 +68,8 @@
 
 
 <script setup lang="ts">
+import { computed } from "vue";
+
 const props = defineProps<{
   modelKey: string;
   busy: boolean;
@@ -85,7 +87,7 @@ defineEmits<{
 
 const logoURL = "https://i.postimg.cc/y6M6KPZ5/logo.jpg";
 
-const engines = [
+const tfjsEngines = [
   {
     key: "realesrgan/general_fast-64",
     name: "LDD Crystal Standard",
@@ -131,6 +133,40 @@ const engines = [
     description: "Perfect for app assets, game sprites, and other clean digital artwork where you want a big resolution jump."
   }
 ];
+
+const onnxEngines = [
+  {
+    key: "onnx/crystal-linework-x4",
+    name: "Crystal Linework",
+    family: "Line Art / Stickers",
+    tagline: "Ultra-clean line art · 4×",
+    description: "Best for line art, anime, stickers, and any design where you want razor sharp ink lines and crisp edges."
+  },
+  {
+    key: "onnx/nebula-hd-x4",
+    name: "Nebula HD",
+    family: "Photos / POD",
+    tagline: "General art & photos · 4×",
+    description: "All-purpose upscale for POD previews, mockups, and product photos where you want strong detail and clarity."
+  },
+  {
+    key: "onnx/diamond-clarity-x4",
+    name: "Diamond Clarity",
+    family: "Art Scans / Texture",
+    tagline: "Restores scans & textures · 4×",
+    description: "Ideal for scanned artwork, textured illustrations, and noisy designs that need cleanup without losing character."
+  },
+  {
+    key: "onnx/ember-studio-x2",
+    name: "Ember Studio 2×",
+    family: "Soft Art / Illustrations",
+    tagline: "Premium gentle upscale · 2×",
+    description: "Perfect for watercolor, soft illustrations, and designs where you want a tasteful 2× upscale without over-sharpening."
+  }
+];
+
+const engines = computed(() => (props.engineCore === "onnx" ? onnxEngines : tfjsEngines));
+
 </script>
 
 <style scoped>
