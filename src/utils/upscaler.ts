@@ -31,9 +31,9 @@ function normalizeForce(img: tf.Tensor3D): tf.Tensor3D {
 }
 
 
-// Use configurable tile size for patches; infer scale from first patch output.
+// Use a fixed patch size; infer scale from first patch output.
 export async function upscaleImage(opts: UpscaleOptions): Promise<Blob> {
-  const { file, modelKey, tileSize, onProgress } = opts;
+  const { file, modelKey, onProgress } = opts;
 
   const imgBitmap = await createImageBitmap(file);
   const width = imgBitmap.width;
@@ -41,7 +41,7 @@ export async function upscaleImage(opts: UpscaleOptions): Promise<Blob> {
 
   const model = await loadModel(modelKey);
 
-  const PATCH = Math.max(32, Math.min(256, tileSize || 64));
+  const PATCH = 128;
 
   // Input canvas
   const inputCanvas = (typeof OffscreenCanvas !== "undefined")
