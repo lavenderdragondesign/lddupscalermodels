@@ -12,8 +12,13 @@
         <div v-if="engine.recommended" class="engine-rec">⭐ Recommended</div>
 
         <div class="engine-main">
-          <div class="engine-name">{{ engine.name }}</div>
-          <div class="engine-tagline">{{ engine.tagline }}</div>
+          <div class="engine-icon-wrap" v-if="engine.icon">
+            <component :is="engine.icon" class="engine-icon" />
+          </div>
+          <div class="engine-text">
+            <div class="engine-name">{{ engine.name }}</div>
+            <div class="engine-tagline">{{ engine.tagline }}</div>
+          </div>
         </div>
         <div class="engine-family">{{ engine.family }}</div>
 
@@ -47,6 +52,8 @@
 
 
 <script setup lang="ts">
+import { ImageUp, Wand2, Sparkles, PenSquare } from "lucide-vue-next";
+
 const props = defineProps<{
   modelKey: string;
   busy: boolean;
@@ -66,6 +73,7 @@ const engines = [
     key: "realesrgan/general_fast-64",
     name: "LDD Crystal Standard",
     family: "Photo / General",
+    icon: ImageUp,
     tagline: "Fast, clean upscales for everyday images.",
     description: "Use this for most photos, textures, and product shots when you want a good balance between speed and quality."
   },
@@ -74,6 +82,7 @@ const engines = [
     name: "LDD Crystal HD",
     recommended: true,
     family: "Photo / Print",
+    icon: Wand2,
     tagline: "Highest-quality engine for photos and print.",
     description: "Best choice for Etsy listings, product photos, and anything going to print. Slower, but sharper and cleaner."
   },
@@ -81,21 +90,24 @@ const engines = [
     key: "realesrgan/anime_fast-64",
     name: "LDD Crystal Linework",
     family: "Cartoons / Stickers",
+    icon: PenSquare,
     tagline: "Tuned for flat colors and clean lines.",
-    description: "Great for kawaii stickers, cartoons, emojis, and simple flat-color illustrations without heavy textures."
+    description: "Great for kawaii stickers, cartoons, emojis, and any simple flat-color illustrations without heavy textures."
   },
   {
     key: "realesrgan/anime_plus-64",
     name: "LDD Crystal Linework Pro",
     recommended: true,
-    family: "Detailed Line Art",
-    tagline: "Max clarity for line art and illustration.",
-    description: "Use this when your art has a lot of fine lines: manga-style work, detailed doodles, icons, and illustrational assets."
+    family: "Cartoons / Print",
+    icon: Sparkles,
+    tagline: "Sharper lines and extra detail.",
+    description: "Use this when you need the cleanest possible linework and extra crisp details for print-ready cartoon art."
   },
   {
     key: "realcugan/2x-conservative-64",
     name: "LDD Emerald 2× Clean",
     family: "Logos / UI",
+    icon: ImageUp,
     tagline: "Cleans jagged edges at 2×.",
     description: "Ideal for logos, UI icons, and small digital graphics that need smoother edges without looking overly sharpened."
   },
@@ -103,6 +115,7 @@ const engines = [
     key: "realcugan/4x-conservative-64",
     name: "LDD Emerald 4× Clean",
     family: "Assets / Game Art",
+    icon: ImageUp,
     tagline: "4× upscale for clean digital assets.",
     description: "Perfect for app assets, game sprites, and other clean digital artwork where you want a big resolution jump."
   }
@@ -159,6 +172,24 @@ const engines = [
 }
 
 .engine-main {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+}
+.engine-icon-wrap {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+.engine-icon {
+  width: 18px;
+  height: 18px;
+  opacity: 0.9;
+}
+.engine-text {
   display: flex;
   flex-direction: column;
   gap: 2px;
