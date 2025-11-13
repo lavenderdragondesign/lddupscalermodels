@@ -19,12 +19,10 @@
         </div>
         <div class="hero-right">
           <div class="stat-card">
-            <div class="stat-icon"><ShieldCheck class="stat-icon-svg" /></div>
             <div class="stat-value">100%</div>
             <div class="stat-label">Client-side</div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon"><Wand2 class="stat-icon-svg" /></div>
             <div class="stat-value">4×</div>
             <div class="stat-label">Max upscale</div>
           </div>
@@ -61,7 +59,7 @@
 
         <section class="right">
           <div class="card-header">
-            <h2><span class="step-icon"><ZoomIn class="step-icon-svg" /></span>3. Compare before & after</h2>
+            <h2>3. Compare before & after</h2>
             <span>Zoom in to inspect linework, edges, and small text.</span>
           </div>
           <PreviewPane :inputUrl="inputUrl" :outputUrl="outputUrl" />
@@ -71,13 +69,12 @@
       <transition name="fade-pop">
         <div v-if="showDownloadPopup" class="download-popup">
           <div class="download-card">
-            <div class="download-title">Upscale Complete!</div>
+            <div class="download-title">PNG ready to download</div>
             <p class="download-body">
-              Your high-quality PNG is ready. Tap below to download and reset for your next image.
+              Your upscaled image is ready. Click below to save <strong>ldd-upscaled.png</strong> and start a new image.
             </p>
             <button type="button" class="download-action" @click="handleDownloadAndReset">
-              <DownloadIcon class="download-icon" />
-              <span>Download &amp; Start New</span>
+              Download PNG &amp; start over
             </button>
           </div>
         </div>
@@ -104,7 +101,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import Splash from "./components/Splash.vue";
-import { Wand2, ShieldCheck, ZoomIn, Download as DownloadIcon } from "lucide-vue-next";
 import ImageDropzone from "./components/ImageDropzone.vue";
 import ControlsPanel from "./components/ControlsPanel.vue";
 import PreviewPane from "./components/PreviewPane.vue";
@@ -342,24 +338,7 @@ async function handleUpscale() {
   text-align: center;
   min-width: 80px;
   border: 1px solid rgba(148, 163, 184, 0.4);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
 }
-
-.stat-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.stat-icon-svg {
-  width: 18px;
-  height: 18px;
-  opacity: 0.9;
-}
-
 
 .stat-value {
   font-size: 20px;
@@ -411,19 +390,6 @@ async function handleUpscale() {
   font-size: 14px;
   font-weight: 600;
   color: #f9fafb;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.step-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.step-icon-svg {
-  width: 16px;
-  height: 16px;
-  opacity: 0.95;
 }
 .card-header span {
   font-size: 11px;
@@ -486,13 +452,6 @@ async function handleUpscale() {
   background: #111827;
   color: #f9fafb;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.download-icon {
-  width: 14px;
-  height: 14px;
 }
 
 .download-action:hover {
