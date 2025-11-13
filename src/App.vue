@@ -269,13 +269,15 @@ async function handleUpscale() {
   startTime.value = performance.now();
 
   try {
-    const blob = await upscaleImage({
+    const upscaler = engineCore.value === "onnx" ? upscaleImageOnnx : upscaleImage;
+
+    const blob = await upscaler({
       file: file.value,
       modelKey: modelKey.value,
       scale: 4,
       tileSize: 128,
       overlap: 32,
-      onProgress: p => {
+      onProgress: (p: number) => {
         progress.value = p;
         if (startTime.value != null && p > 0 && p < 100) {
           const elapsedSec = (performance.now() - startTime.value) / 1000;
