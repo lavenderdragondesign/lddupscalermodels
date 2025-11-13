@@ -204,8 +204,8 @@ async function handleUpscale() {
       file: file.value,
       modelKey: modelKey.value,
       scale: 4,
-      tileSize: 64,
-      overlap: 0,
+      tileSize: 128,
+      overlap: 32,
       onProgress: p => {
         progress.value = p;
         if (startTime.value != null && p > 0 && p < 100) {
