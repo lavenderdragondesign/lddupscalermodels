@@ -6,15 +6,13 @@
         :key="engine.key"
         type="button"
         class="engine-btn"
-        <div v-if="engine.recommended" class="engine-rec">⭐ Recommended</div>
         :class="{ 'engine-btn--active': engine.key === modelKey }"
         @click="$emit('update:modelKey', engine.key)"
       >
+        <div v-if="engine.recommended" class="engine-rec">⭐ Recommended</div>
+
         <div class="engine-main">
-          <div class="engine-name">
-            {{ engine.name }}
-            <span v-if="engine.recommended" class="engine-badge">Recommended</span>
-          </div>
+          <div class="engine-name">{{ engine.name }}</div>
           <div class="engine-tagline">{{ engine.tagline }}</div>
         </div>
         <div class="engine-family">{{ engine.family }}</div>
@@ -45,6 +43,8 @@
     </div>
   </div>
 </template>
+
+
 
 <script setup lang="ts">
 const props = defineProps<{
