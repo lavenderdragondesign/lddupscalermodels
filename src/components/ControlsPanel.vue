@@ -231,8 +231,18 @@ const engines = [
 
 .spinner {
   position: relative;
-  width: 34px;
-  height: 34px;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.spinner-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 999px;
+  animation: spinner-rotate 1.2s linear infinite;
 }
 
 .spinner-glow {
@@ -244,11 +254,54 @@ const engines = [
   animation: spinner-pulse 1.4s ease-in-out infinite;
 }
 
+.spinner {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
 .spinner-logo {
-  position: absolute;
-  inset: 4px;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   border-radius: 999px;
   animation: spinner-rotate 1.2s linear infinite;
+}
+
+.spinner-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.35), transparent 60%);
+  box-shadow: 0 0 18px rgba(168, 85, 247, 0.9);
+  animation: spinner-pulse 1.4s ease-in-out infinite;
+}
+
+.spinner {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.spinner-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 999px;
+  animation: spinner-rotate 1.2s linear infinite;
+}
+
+.spinner-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.35), transparent 60%);
+  box-shadow: 0 0 18px rgba(168, 85, 247, 0.9);
+  animation: spinner-pulse 1.4s ease-in-out infinite;
 }
 
 .percent {
