@@ -3,6 +3,41 @@
 
   <div v-else class="app">
     <div class="shell">
+      <div class="dev-mode-shell">
+        <button
+          type="button"
+          class="dev-chip"
+          @click="showDevPrompt = !showDevPrompt"
+        >
+          Dev mode
+          <span v-if="devMode" class="dev-dot"></span>
+        </button>
+
+        <div v-if="showDevPrompt" class="dev-card">
+          <template v-if="!devMode">
+            <div class="dev-title">Unlock dev mode</div>
+            <input
+              v-model="devPassword"
+              type="password"
+              class="dev-input"
+              placeholder="Enter dev password"
+              @keydown.enter="handleDevLogin"
+            />
+            <button type="button" class="dev-btn" @click="handleDevLogin">
+              Unlock
+            </button>
+            <div v-if="devError" class="dev-error">{{ devError }}</div>
+          </template>
+
+          <template v-else>
+            <div class="dev-title">Dev mode enabled</div>
+            <p class="dev-hint">Advanced options like ONNX core are visible.</p>
+            <button type="button" class="dev-btn dev-btn--ghost" @click="handleDevLogout">
+              Disable dev mode
+            </button>
+          </template>
+        </div>
+      </div>
       <header class="hero">
         <div class="hero-left">
           <div class="hero-brand">
@@ -19,12 +54,10 @@
         </div>
         <div class="hero-right">
           <div class="stat-card">
-            <div class="stat-icon"><ShieldCheck class="stat-icon-svg" /></div>
             <div class="stat-value">100%</div>
             <div class="stat-label">Client-side</div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon"><Wand2 class="stat-icon-svg" /></div>
             <div class="stat-value">4×</div>
             <div class="stat-label">Max upscale</div>
           </div>
@@ -54,14 +87,17 @@
             :busy="busy"
             :progress="progress"
             :etaText="etaText"
+            :engineCore="engineCore"
+            :devMode="devMode"
             @update:modelKey="val => (modelKey = val)"
+            @update:engineCore="val => (engineCore = val)"
             @upscale="handleUpscale"
           />
         </section>
 
         <section class="right">
           <div class="card-header">
-            <h2><span class="step-icon"><ZoomIn class="step-icon-svg" /></span>3. Compare before & after</h2>
+            <h2>3. Compare before & after</h2>
             <span>Zoom in to inspect linework, edges, and small text.</span>
           </div>
           <PreviewPane :inputUrl="inputUrl" :outputUrl="outputUrl" />
@@ -71,13 +107,12 @@
       <transition name="fade-pop">
         <div v-if="showDownloadPopup" class="download-popup">
           <div class="download-card">
-            <div class="download-title">Upscale Complete!</div>
+            <div class="download-title">PNG ready to download</div>
             <p class="download-body">
-              Your high-quality PNG is ready. Tap below to download and reset for your next image.
+              Your upscaled image is ready. Click below to save <strong>ldd-upscaled.png</strong> and start a new image.
             </p>
             <button type="button" class="download-action" @click="handleDownloadAndReset">
-              <DownloadIcon class="download-icon" />
-              <span>Download &amp; Start New</span>
+              Download PNG &amp; start over
             </button>
           </div>
         </div>
@@ -104,11 +139,11 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import Splash from "./components/Splash.vue";
-import { Wand2, ShieldCheck, ZoomIn, Download as DownloadIcon } from "lucide-vue-next";
 import ImageDropzone from "./components/ImageDropzone.vue";
 import ControlsPanel from "./components/ControlsPanel.vue";
 import PreviewPane from "./components/PreviewPane.vue";
 import { upscaleImage } from "./utils/upscaler";
+import { upscaleImageOnnx } from "./utils/upscaler-onnx";
 
 const logoURL = "https://i.postimg.cc/y6M6KPZ5/logo.jpg";
 const bmcImageURL = "https://i.postimg.cc/28YhHbfZ/bmc-button.png";
@@ -117,8 +152,39 @@ const etsyLinkURL = "https://www.etsy.com/shop/LavenderDragonDesign";
 const etsyIconURL = "https://img.icons8.com/?size=100&id=MQ-HLKLCGrJn&format=png&color=000000";
 
 const loading = ref(true);
+const modelKey = ref("realesrgan/anime_plus-64");
+const engineCore = ref<"tfjs" | "onnx">("tfjs");
+
+const devMode = ref(false);
+const showDevPrompt = ref(false);
+const devPassword = ref("");
+const devError = ref("");
+
+const DEV_PASSWORD = "ldd-dragon-999";
+const DEV_KEY = "ldd-dev-mode";
+
 
 const file = ref<File | null>(null);
+
+function handleDevLogin() {
+  if (devPassword.value === DEV_PASSWORD) {
+    devMode.value = true;
+    localStorage.setItem(DEV_KEY, "1");
+    devPassword.value = "";
+    devError.value = "";
+    showDevPrompt.value = false;
+  } else {
+    devError.value = "Incorrect dev password.";
+  }
+}
+
+function handleDevLogout() {
+  devMode.value = false;
+  localStorage.removeItem(DEV_KEY);
+  devPassword.value = "";
+  devError.value = "";
+}
+
 const inputUrl = ref<string | null>(null);
 const outputUrl = ref<string | null>(null);
 
@@ -254,6 +320,96 @@ async function handleUpscale() {
 </script>
 
 <style scoped>
+
+.dev-mode-shell {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.dev-chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.9));
+  color: #e5e7eb;
+  font-size: 11px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dev-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #22c55e;
+}
+
+.dev-card {
+  margin-top: 4px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #020617;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.8);
+  width: 230px;
+}
+
+.dev-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e5e7eb;
+  margin-bottom: 6px;
+}
+
+.dev-input {
+  width: 100%;
+  padding: 5px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: #020617;
+  color: #e5e7eb;
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+
+.dev-btn {
+  width: 100%;
+  padding: 5px 8px;
+  border-radius: 8px;
+  border: none;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #4c1d95;
+  color: #f9fafb;
+}
+
+.dev-btn--ghost {
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+}
+
+.dev-error {
+  margin-top: 4px;
+  font-size: 10px;
+  color: #f97373;
+}
+
+.dev-hint {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-bottom: 6px;
+}
+
+
 .app {
   min-height: 100vh;
   display: flex;
@@ -342,24 +498,7 @@ async function handleUpscale() {
   text-align: center;
   min-width: 80px;
   border: 1px solid rgba(148, 163, 184, 0.4);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
 }
-
-.stat-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.stat-icon-svg {
-  width: 18px;
-  height: 18px;
-  opacity: 0.9;
-}
-
 
 .stat-value {
   font-size: 20px;
@@ -411,19 +550,6 @@ async function handleUpscale() {
   font-size: 14px;
   font-weight: 600;
   color: #f9fafb;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.step-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.step-icon-svg {
-  width: 16px;
-  height: 16px;
-  opacity: 0.95;
 }
 .card-header span {
   font-size: 11px;
@@ -486,13 +612,6 @@ async function handleUpscale() {
   background: #111827;
   color: #f9fafb;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.download-icon {
-  width: 14px;
-  height: 14px;
 }
 
 .download-action:hover {

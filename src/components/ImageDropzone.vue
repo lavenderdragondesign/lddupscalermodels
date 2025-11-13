@@ -7,7 +7,6 @@
     @drop.prevent="handleDrop"
   >
     <div v-if="!file">
-      <div class="icon-wrap"><UploadCloud class="upload-icon" /></div>
       <p class="title">Drop an image here</p>
       <p class="subtitle">or click to browse</p>
       <input
@@ -30,7 +29,6 @@
 
 <script setup lang="ts">
 import { computed, defineEmits, defineProps } from "vue";
-import { UploadCloud } from "lucide-vue-next";
 
 const props = defineProps<{
   file: File | null;
