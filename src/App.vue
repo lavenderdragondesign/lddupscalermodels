@@ -87,7 +87,24 @@ const busy = ref(false);
 const progress = ref(0);
 
 onMounted(() => {
-  setTimeout(() => (loading.value = false), 900);
+  try {
+    const seen = window.localStorage.getItem("ldd-upscaler-splash-seen");
+    if (seen === "1") {
+      loading.value = false;
+      return;
+    }
+  } catch (e) {
+    // ignore, just fall back to showing splash once
+  }
+
+  setTimeout(() => {
+    loading.value = false;
+    try {
+      window.localStorage.setItem("ldd-upscaler-splash-seen", "1");
+    } catch (e) {
+      // ignore
+    }
+  }, 6000);
 });
 
 function onFileChange(newFile: File | null) {
