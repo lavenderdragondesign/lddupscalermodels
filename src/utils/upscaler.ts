@@ -31,9 +31,9 @@ function normalizeForce(img: tf.Tensor3D): tf.Tensor3D {
 }
 
 
-// Always feed 64x64 patches to the model; infer scale from first patch output.
+// Use configurable tile size for patches; infer scale from first patch output.
 export async function upscaleImage(opts: UpscaleOptions): Promise<Blob> {
-  const { file, modelKey, onProgress } = opts;
+  const { file, modelKey, tileSize, onProgress } = opts;
 
   const imgBitmap = await createImageBitmap(file);
   const width = imgBitmap.width;
@@ -41,7 +41,7 @@ export async function upscaleImage(opts: UpscaleOptions): Promise<Blob> {
 
   const model = await loadModel(modelKey);
 
-  const PATCH = 64;
+  const PATCH = Math.max(32, Math.min(256, tileSize || 64));
 
   // Input canvas
   const inputCanvas = (typeof OffscreenCanvas !== "undefined")
@@ -74,7 +74,7 @@ export async function upscaleImage(opts: UpscaleOptions): Promise<Blob> {
     const patchData = paddedCtx.getImageData(0, 0, PATCH, PATCH);
     const patchTensor = tf.tidy(() => {
       const t = tf.browser.fromPixels(patchData) as tf.Tensor3D;
-      return normalizeForce(t).expandDims(0); // [1,64,64,3]
+      return normalizeForce(t).expandDims(0); // [1,H,W,3]
     });
 
     const out = await tf.tidy(() => {
@@ -135,7 +135,7 @@ export async function upscaleImage(opts: UpscaleOptions): Promise<Blob> {
 
       const tileTensor = tf.tidy(() => {
         const t = tf.browser.fromPixels(patchData) as tf.Tensor3D;
-        return normalizeForce(t).expandDims(0); // [1,64,64,3]
+        return normalizeForce(t).expandDims(0); // [1,H,W,3]
       });
 
       const rawOutput = (await tf.tidy(() => {

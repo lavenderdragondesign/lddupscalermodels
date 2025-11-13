@@ -54,7 +54,9 @@
             :busy="busy"
             :progress="progress"
             :etaText="etaText"
+            :tileSize="tileSize"
             @update:modelKey="val => (modelKey = val)"
+            @update:tileSize="val => (tileSize = val)"
             @upscale="handleUpscale"
           />
         </section>
@@ -123,6 +125,7 @@ const inputUrl = ref<string | null>(null);
 const outputUrl = ref<string | null>(null);
 
 const modelKey = ref("realesrgan/anime_plus-64");
+const tileSize = ref(64);
 
 const busy = ref(false);
 const progress = ref(0);
@@ -208,7 +211,7 @@ async function handleUpscale() {
       file: file.value,
       modelKey: modelKey.value,
       scale: 4,
-      tileSize: 128,
+      tileSize: tileSize.value,
       overlap: 32,
       onProgress: p => {
         progress.value = p;

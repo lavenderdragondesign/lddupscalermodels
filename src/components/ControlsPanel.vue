@@ -47,6 +47,33 @@
       </div>
     </div>
   </div>
+
+    <div class="tile-section">
+      <div class="tile-label">Tile size</div>
+      <div class="tile-grid">
+        <button
+          v-for="tile in tileOptions"
+          :key="tile.value"
+          type="button"
+          class="tile-btn"
+          :class="{ 'tile-btn--active': tile.value === tileSize }"
+          @click="$emit('update:tileSize', tile.value)"
+        >
+          <div class="tile-main">
+            <div class="tile-name">{{ tile.label }}</div>
+            <div class="tile-tagline">{{ tile.tagline }}</div>
+          </div>
+
+          <div class="tile-hover-card">
+            <div class="hover-title">{{ tile.label }} tile</div>
+            <p class="hover-body">
+              {{ tile.description }}
+            </p>
+          </div>
+        </button>
+      </div>
+    </div>
+
 </template>
 
 
@@ -59,10 +86,12 @@ const props = defineProps<{
   busy: boolean;
   progress: number;
   etaText: string | null;
+  tileSize: number;
 }>();
 
 defineEmits<{
   "update:modelKey": [string];
+  "update:tileSize": [number];
   upscale: [];
 }>();
 
@@ -120,6 +149,43 @@ const engines = [
     description: "Perfect for app assets, game sprites, and other clean digital artwork where you want a big resolution jump."
   }
 ];
+
+
+
+const tileOptions = [
+  {
+    value: 32,
+    label: "32 px",
+    tagline: "Safest for low-powered devices.",
+    description: "Use 32 px tiles if your device is struggling or crashing on bigger images. Slower, but very safe for memory."
+  },
+  {
+    value: 64,
+    label: "64 px",
+    tagline: "Balanced default.",
+    description: "Good balance for most images. Slightly slower than large tiles, but more stable on older machines."
+  },
+  {
+    value: 128,
+    label: "128 px",
+    tagline: "Fast on modern machines.",
+    description: "Recommended for most laptops and desktops. Faster processing while still being friendly to memory."
+  },
+  {
+    value: 192,
+    label: "192 px",
+    tagline: "Bigger tiles, faster runs.",
+    description: "Use when you have a decent GPU/CPU and want faster upscales. May be heavy on very large images."
+  },
+  {
+    value: 256,
+    label: "256 px",
+    tagline: "Max speed, max memory.",
+    description: "Fastest option, but uses the most memory. Best for smaller images or powerful desktops."
+  }
+];
+
+
 </script>
 
 <style scoped>
@@ -385,6 +451,89 @@ const engines = [
     transform: scale(0.9);
     opacity: 0.7;
   }
+}
+
+.tile-section {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(148, 163, 184, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tile-label {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
+
+.tile-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tile-btn {
+  position: relative;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
+  color: #e5e7eb;
+  cursor: pointer;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tile-btn--active {
+  border-color: #a855f7;
+  box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.6), 0 16px 35px rgba(0, 0, 0, 0.7);
+}
+
+.tile-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tile-name {
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.tile-tagline {
+  font-size: 10px;
+  opacity: 0.8;
+}
+
+.tile-hover-card {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  transform: translate(10px, -50%);
+  width: 220px;
+  padding: 9px 11px;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  font-size: 11px;
+  line-height: 1.4;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+  z-index: 20;
+  text-align: left;
+}
+
+.tile-btn:hover .tile-hover-card {
+  opacity: 1;
+  transform: translate(8px, -50%);
 }
 
 
