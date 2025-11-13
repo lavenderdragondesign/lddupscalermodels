@@ -1,4 +1,3 @@
-
 <template>
   <div class="preview">
     <section class="pane single">
@@ -7,17 +6,20 @@
         <span class="hint" v-if="inputUrl && outputUrl">Drag the handle to compare</span>
       </div>
 
-      <div
-        v-if="inputUrl && outputUrl"
-        class="compare-shell"
-      >
+      <!-- Full comparison slider when we have both images -->
+      <div v-if="inputUrl && outputUrl" class="compare-shell">
         <div class="compare-frame">
           <div class="zoom-layer">
             <!-- Upscaled image as the base -->
             <img :src="outputUrl" alt="Upscaled image" class="img-base" />
 
             <!-- Original image clipped to slider position -->
-            <div class="img-overlay" :style="{ clipPath: `inset(0 ${100}-sliderPos + '%' 0 0)` }">
+            <div
+              class="img-overlay"
+              :style="{
+                clipPath: `inset(0 ${(100 - sliderPos).toFixed(1)}% 0 0)`
+              }"
+            >
               <img :src="inputUrl" alt="Original image" />
             </div>
           </div>
@@ -45,9 +47,18 @@
         </div>
       </div>
 
+      <!-- Single before preview as soon as an image is loaded -->
+      <div v-else-if="inputUrl && !outputUrl" class="single-shell">
+        <div class="single-frame">
+          <img :src="inputUrl" alt="Original image" class="single-img" />
+          <div class="single-tag">Before</div>
+        </div>
+        <p class="single-hint">Run the upscaler to see the after view.</p>
+      </div>
+
+      <!-- No image yet -->
       <div v-else class="empty-state">
-        <p v-if="!inputUrl">Load an image on the left to begin.</p>
-        <p v-else-if="!outputUrl">Run the upscaler to see the comparison.</p>
+        <p>Load an image on the left to begin.</p>
       </div>
 
       <button
@@ -61,6 +72,8 @@
     </section>
   </div>
 </template>
+
+
 
 <script setup lang="ts">
 import { ref } from "vue";
@@ -127,6 +140,47 @@ function download() {
 
 .compare-shell {
   margin-top: 4px;
+}
+
+.single-shell {
+  margin-top: 4px;
+}
+
+.single-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 18px;
+  overflow: hidden;
+  background: radial-gradient(circle at center, #020617, #020617 40%, #000 100%);
+  border: 1px solid rgba(148, 163, 184, 0.6);
+}
+
+.single-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.single-tag {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  padding: 4px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 999px;
+  backdrop-filter: blur(10px);
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  color: #e5e7eb;
+}
+
+.single-hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: rgba(209, 213, 219, 0.85);
 }
 
 .compare-frame {
