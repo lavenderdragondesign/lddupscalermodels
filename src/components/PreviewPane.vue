@@ -1,39 +1,37 @@
 <template>
   <div class="preview">
-    <div v-if="inputUrl && outputUrl" class="compare-wrapper">
-      <div class="compare-inner">
-        <img :src="inputUrl" alt="Original" class="img base" />
-        <div class="img-overlay" :style="{ width: slider + '%' }">
-          <img :src="outputUrl" alt="Upscaled" class="img top" />
-        </div>
-        <div class="handle" :style="{ left: slider + '%' }"></div>
-        <div class="label label-left">Original</div>
-        <div class="label label-right">Upscaled</div>
+    <section class="pane">
+      <div class="label">Original</div>
+      <div class="image-box">
+        <img v-if="inputUrl" :src="inputUrl" alt="Original image" />
+        <span v-else class="placeholder">No image loaded yet</span>
       </div>
-      <input type="range" min="0" max="100" v-model.number="slider" class="slider" />
-      <div class="actions">
-        <button type="button" class="download-btn" @click="download" :disabled="!outputUrl">
-          Download upscaled PNG
-        </button>
-      </div>
-    </div>
+    </section>
 
-    <div v-else class="empty">
-      <p class="empty-title">No comparison yet</p>
-      <p class="empty-subtitle">Load an image and run the upscaler to see the before/after slider.</p>
-    </div>
+    <section class="pane">
+      <div class="label">Upscaled</div>
+      <div class="image-box">
+        <img v-if="outputUrl" :src="outputUrl" alt="Upscaled image" />
+        <span v-else class="placeholder">Run the upscaler to see your result</span>
+      </div>
+
+      <button
+        v-if="outputUrl"
+        type="button"
+        class="download-btn"
+        @click="download"
+      >
+        Download Upscaled PNG (300 DPI Ready)
+      </button>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-
 const props = defineProps<{
   inputUrl: string | null;
   outputUrl: string | null;
 }>();
-
-const slider = ref(50);
 
 function download() {
   if (!props.outputUrl) return;
@@ -48,118 +46,57 @@ function download() {
 
 <style scoped>
 .preview {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
-
-.compare-wrapper {
+.pane {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-
-.compare-inner {
-  position: relative;
-  border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  background: radial-gradient(circle at top left, #020617, #020617 55%, #030712 100%);
-  min-height: 240px;
-  overflow: hidden;
-}
-
-.img {
-  display: block;
-  max-width: 100%;
-  height: auto;
-}
-
-.base {
-  position: relative;
-  z-index: 1;
-}
-
-.img-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  overflow: hidden;
-  z-index: 2;
-}
-
-.img-overlay .top {
-  height: 100%;
-  width: auto;
-}
-
-.handle {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: #e5e7eb;
-  z-index: 3;
-  transform: translateX(-1px);
-}
-
 .label {
-  position: absolute;
-  top: 8px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 11px;
-  background: rgba(15, 23, 42, 0.85);
-  color: #e5e7eb;
-  z-index: 4;
-}
-
-.label-left {
-  left: 8px;
-}
-
-.label-right {
-  right: 8px;
-}
-
-.slider {
-  width: 100%;
-}
-
-.actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.download-btn {
-  padding: 6px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.7);
-  background: #020617;
-  color: #e5e7eb;
   font-size: 12px;
-  cursor: pointer;
-}
-.download-btn:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-.empty {
-  border-radius: 12px;
-  border: 1px dashed rgba(148, 163, 184, 0.6);
-  padding: 20px;
-  text-align: center;
-  background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.8));
-}
-.empty-title {
-  font-size: 14px;
   font-weight: 600;
   color: #e5e7eb;
 }
-.empty-subtitle {
+.image-box {
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: radial-gradient(circle at top left, #020617, #020617 55%, #030712 100%);
+  min-height: 220px;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.image-box img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+.placeholder {
   font-size: 12px;
   opacity: 0.7;
   color: #9ca3af;
+}
+.download-btn {
+  margin-top: 10px;
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  background: linear-gradient(90deg, #a855f7, #22c55e, #0ea5e9);
+  background-size: 200% 100%;
+  color: #f9fafb;
+  cursor: pointer;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.8);
+}
+@media (max-width: 900px) {
+  .preview {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
