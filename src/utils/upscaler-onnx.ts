@@ -1,5 +1,7 @@
 import * as ort from "onnxruntime-web";
 
+ort.env.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/";
+
 export interface UpscaleOptionsOnnx {
   file: File;
   modelKey: string;
