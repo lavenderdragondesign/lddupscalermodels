@@ -9,6 +9,8 @@
         :class="{ 'engine-btn--active': engine.key === modelKey }"
         @click="$emit('update:modelKey', engine.key)"
       >
+        <div v-if="engine.recommended" class="engine-rec">⭐ Recommended</div>
+
         <div class="engine-main">
           <div class="engine-name">{{ engine.name }}</div>
           <div class="engine-tagline">{{ engine.tagline }}</div>
@@ -30,27 +32,34 @@
         <span v-else>Upscale image</span>
       </button>
 
-      <div v-if="busy" class="progress">
-        <div class="bar">
-          <div class="fill" :style="{ width: progress + '%' }"></div>
+      <div v-if="busy" class="progress progress--spinner">
+        <div class="spinner">
+          <div class="spinner-glow"></div>
+          <img :src="logoURL" alt="LavenderDragonDesign logo" class="spinner-logo" />
         </div>
-        <span class="label">{{ progress.toFixed(0) }}%</span>
+        <span class="percent">{{ progress.toFixed(0) }}%</span>
+        <span v-if="etaText" class="eta">~{{ etaText }} left</span>
       </div>
     </div>
   </div>
 </template>
+
+
 
 <script setup lang="ts">
 const props = defineProps<{
   modelKey: string;
   busy: boolean;
   progress: number;
+  etaText: string | null;
 }>();
 
 defineEmits<{
   "update:modelKey": [string];
   upscale: [];
 }>();
+
+const logoURL = "https://i.postimg.cc/y6M6KPZ5/logo.jpg";
 
 const engines = [
   {
@@ -63,6 +72,7 @@ const engines = [
   {
     key: "realesrgan/general_plus-64",
     name: "LDD Crystal HD",
+    recommended: true,
     family: "Photo / Print",
     tagline: "Highest-quality engine for photos and print.",
     description: "Best choice for Etsy listings, product photos, and anything going to print. Slower, but sharper and cleaner."
@@ -77,6 +87,7 @@ const engines = [
   {
     key: "realesrgan/anime_plus-64",
     name: "LDD Crystal Linework Pro",
+    recommended: true,
     family: "Detailed Line Art",
     tagline: "Max clarity for line art and illustration.",
     description: "Use this when your art has a lot of fine lines: manga-style work, detailed doodles, icons, and illustrational assets."
@@ -99,6 +110,21 @@ const engines = [
 </script>
 
 <style scoped>
+.engine-rec {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 9px;
+  background: rgba(34,197,94,0.2);
+  color: #bbf7d0;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(34,197,94,0.6);
+}
+.engine-btn {
+  position: relative;
+}
+
 .panel {
   margin-top: 8px;
   display: flex;
@@ -197,40 +223,139 @@ const engines = [
 }
 
 .btn {
-  padding: 8px 18px;
+  padding: 10px 26px;
   border-radius: 999px;
   border: none;
-  background: linear-gradient(90deg, #a855f7, #22c55e);
+  background: #a855f7;
   color: white;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
+  box-shadow: 0 16px 40px rgba(88, 28, 135, 0.6);
 }
+
 .btn:disabled {
   opacity: 0.6;
   cursor: default;
 }
+
 .progress {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
   flex: 1;
+  justify-content: flex-end;
 }
-.bar {
-  flex: 1;
-  height: 6px;
+
+.progress--spinner {
+  justify-content: flex-end;
+}
+
+.spinner {
+  position: relative;
+  width: 42px;
+  height: 42px;
   border-radius: 999px;
-  background: #e5e7eb;
+  overflow: hidden;
 }
-.fill {
+
+.spinner-logo {
+  width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, #a855f7, #0ea5e9);
-  border-radius: inherit;
+  object-fit: cover;
+  border-radius: 999px;
+  animation: spinner-rotate 1.2s linear infinite;
 }
-.label {
-  font-size: 11px;
-  opacity: 0.8;
+
+.spinner-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.35), transparent 60%);
+  box-shadow: 0 0 18px rgba(168, 85, 247, 0.9);
+  animation: spinner-pulse 1.4s ease-in-out infinite;
 }
+
+.spinner {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.spinner-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 999px;
+  animation: spinner-rotate 1.2s linear infinite;
+}
+
+.spinner-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.35), transparent 60%);
+  box-shadow: 0 0 18px rgba(168, 85, 247, 0.9);
+  animation: spinner-pulse 1.4s ease-in-out infinite;
+}
+
+.spinner {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.spinner-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 999px;
+  animation: spinner-rotate 1.2s linear infinite;
+}
+
+.spinner-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.35), transparent 60%);
+  box-shadow: 0 0 18px rgba(168, 85, 247, 0.9);
+  animation: spinner-pulse 1.4s ease-in-out infinite;
+}
+
+.percent {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+@keyframes spinner-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spinner-pulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+}
+
 
 @media (max-width: 900px) {
   .engine-grid {

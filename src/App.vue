@@ -5,11 +5,16 @@
     <div class="shell">
       <header class="hero">
         <div class="hero-left">
-          <div class="pill">LavenderDragonDesign · Browser Upscaler</div>
-          <h1>Sharpen your art without leaving the browser.</h1>
+          <div class="hero-brand">
+            <img :src="logoURL" alt="LavenderDragonDesign logo" class="hero-logo" />
+            <div class="hero-brand-text">
+              <div class="pill">LavenderDragonDesign's Image Upscaler</div>
+            </div>
+          </div>
+          <h1>Upscale your images in the browser, fast and free.</h1>
           <p>
-            Pick an LDD Crystal or Emerald engine, drop in your image, and get
-            upscale-ready files for Etsy, POD, and print in seconds.
+            LDD Crystal &amp; Emerald engines give you high-quality 4× upscales, 100% client-side,
+            with no logins, uploads, or watermarks.
           </p>
         </div>
         <div class="hero-right">
@@ -46,6 +51,7 @@
             :modelKey="modelKey"
             :busy="busy"
             :progress="progress"
+            :etaText="etaText"
             @update:modelKey="val => (modelKey = val)"
             @upscale="handleUpscale"
           />
@@ -60,8 +66,33 @@
         </section>
       </main>
 
+      <transition name="fade-pop">
+        <div v-if="showDownloadPopup" class="download-popup">
+          <div class="download-card">
+            <div class="download-title">PNG ready to download</div>
+            <p class="download-body">
+              Your upscaled image is ready. Click below to save <strong>ldd-upscaled.png</strong> and start a new image.
+            </p>
+            <button type="button" class="download-action" @click="handleDownloadAndReset">
+              Download PNG &amp; start over
+            </button>
+          </div>
+        </div>
+      </transition>
+
       <footer class="footer">
-        LavenderDragonDesign · Built for Etsy & POD workflows · MIT Licensed
+        <div class="footer-inner">
+          <img :src="logoURL" alt="LavenderDragonDesign logo" class="footer-logo" />
+          <span class="footer-text">
+            LavenderDragonDesign · Free browser image upscaler · MIT Licensed ·
+          </span>
+          <a :href="etsyLinkURL" target="_blank" rel="noreferrer" class="footer-link">
+            <img :src="etsyIconURL" alt="Etsy" class="footer-etsy-icon" />
+          </a>
+          <a :href="bmcLinkURL" target="_blank" rel="noreferrer" class="footer-bmc">
+            <img :src="bmcImageURL" alt="Buy Me a Coffee" />
+          </a>
+        </div>
       </footer>
     </div>
   </div>
@@ -75,19 +106,46 @@ import ControlsPanel from "./components/ControlsPanel.vue";
 import PreviewPane from "./components/PreviewPane.vue";
 import { upscaleImage } from "./utils/upscaler";
 
+const logoURL = "https://i.postimg.cc/y6M6KPZ5/logo.jpg";
+const bmcImageURL = "https://i.postimg.cc/28YhHbfZ/bmc-button.png";
+const bmcLinkURL = "https://buymeacoffee.com/lavenderdragondesign";
+const etsyLinkURL = "https://www.etsy.com/shop/LavenderDragonDesign";
+const etsyIconURL = "https://img.icons8.com/?size=100&id=MQ-HLKLCGrJn&format=png&color=000000";
+
 const loading = ref(true);
 
 const file = ref<File | null>(null);
 const inputUrl = ref<string | null>(null);
 const outputUrl = ref<string | null>(null);
 
-const modelKey = ref("realesrgan/general_plus-64");
+const modelKey = ref("realesrgan/anime_plus-64");
 
 const busy = ref(false);
 const progress = ref(0);
+const etaText = ref<string | null>(null);
+const startTime = ref<number | null>(null);
+const showDownloadPopup = ref(false);
+let downloadPopupTimeout: number | null = null;
 
 onMounted(() => {
-  setTimeout(() => (loading.value = false), 900);
+  try {
+    const seen = window.localStorage.getItem("ldd-upscaler-splash-seen");
+    if (seen === "1") {
+      loading.value = false;
+      return;
+    }
+  } catch (e) {
+    // ignore, just fall back to showing splash once
+  }
+
+  setTimeout(() => {
+    loading.value = false;
+    try {
+      window.localStorage.setItem("ldd-upscaler-splash-seen", "1");
+    } catch (e) {
+      // ignore
+    }
+  }, 6000);
 });
 
 function onFileChange(newFile: File | null) {
@@ -101,11 +159,45 @@ function onFileChange(newFile: File | null) {
   }
 }
 
+function triggerDownloadPopup() {
+  showDownloadPopup.value = true;
+  // auto-hide disabled
+}
+
+
+function handleDownloadAndReset() {
+  if (!outputUrl.value) return;
+
+  const a = document.createElement("a");
+  a.href = outputUrl.value;
+  a.download = "ldd-upscaled.png";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  showDownloadPopup.value = false;
+
+  // reset state so user can start fresh
+  file.value = null;
+  inputUrl.value = null;
+
+  if (outputUrl.value) {
+    URL.revokeObjectURL(outputUrl.value);
+  }
+  outputUrl.value = null;
+  progress.value = 0;
+  etaText.value = null;
+  busy.value = false;
+  startTime.value = null;
+}
+
 async function handleUpscale() {
   if (!file.value || !inputUrl.value) return;
 
   busy.value = true;
   progress.value = 0;
+  etaText.value = null;
+  startTime.value = performance.now();
 
   try {
     const blob = await upscaleImage({
@@ -114,20 +206,45 @@ async function handleUpscale() {
       scale: 4,
       tileSize: 64,
       overlap: 0,
-      onProgress: p => (progress.value = p)
+      onProgress: p => {
+        progress.value = p;
+        if (startTime.value != null && p > 0 && p < 100) {
+          const elapsedSec = (performance.now() - startTime.value) / 1000;
+          if (elapsedSec > 0) {
+            const rate = p / elapsedSec; // percent per second
+            if (rate > 0.01) {
+              const remainingSec = (100 - p) / rate;
+              const clamped = Math.max(1, Math.min(remainingSec, 60 * 30));
+              const mins = Math.floor(clamped / 60);
+              const secs = Math.round(clamped % 60);
+              if (mins > 0) {
+                etaText.value = `${mins}m ${secs}s`;
+              } else {
+                etaText.value = `${secs}s`;
+              }
+            }
+          }
+        }
+      }
     });
 
     if (outputUrl.value) {
       URL.revokeObjectURL(outputUrl.value);
     }
 
-    outputUrl.value = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blob);
+    outputUrl.value = url;
+
+    // Auto-download PNG
+    showDownloadPopup.value = true;
   } catch (err) {
     console.error(err);
     alert("Upscale failed. Check console for details.");
   } finally {
     busy.value = false;
     progress.value = 0;
+    etaText.value = null;
+    startTime.value = null;
   }
 }
 </script>
@@ -149,6 +266,27 @@ async function handleUpscale() {
   max-width: 1120px;
   margin: 0 auto;
   padding: 20px 16px 28px;
+}
+
+
+.hero-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.hero-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85);
+  flex-shrink: 0;
+}
+
+.hero-brand-text {
+  display: flex;
+  flex-direction: column;
 }
 
 /* HERO */
@@ -176,13 +314,14 @@ async function handleUpscale() {
 .pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
+  gap: 8px;
+  padding: 7px 20px;
   border-radius: 999px;
-  font-size: 11px;
-  background: rgba(147, 51, 234, 0.22);
+  font-size: 14px;
+  letter-spacing: 0.03em;
+  background: rgba(147, 51, 234, 0.35);
   color: #e9d5ff;
-  border: 1px solid rgba(129, 140, 248, 0.6);
+  border: 1px solid rgba(129, 140, 248, 0.9);
 }
 
 .hero-right {
@@ -230,7 +369,16 @@ async function handleUpscale() {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  position: relative;
   border: 1px solid rgba(30, 64, 175, 0.6);
+}
+
+.left {
+  z-index: 2;
+}
+
+.right {
+  z-index: 1;
 }
 
 .card-header {
@@ -258,9 +406,104 @@ async function handleUpscale() {
   text-align: center;
   font-size: 12px;
   padding: 14px 4px 0;
-  opacity: 0.7;
-  color: #9ca3af;
+  opacity: 0.95;
+  color: #e5e7eb;
 }
+
+.download-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 40;
+}
+
+.download-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  background: #ffffff;
+  color: #020617;
+  padding: 12px 16px;
+  border-radius: 16px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.65);
+  max-width: 260px;
+  font-size: 13px;
+}
+
+.download-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.download-body strong {
+  font-weight: 600;
+}
+
+.download-action {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  background: #111827;
+  color: #f9fafb;
+  cursor: pointer;
+}
+
+.download-action:hover {
+  background: #020617;
+}
+
+/* simple fade+scale transition */
+.fade-pop-enter-active,
+.fade-pop-leave-active {
+  transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+}
+
+.fade-pop-enter-from,
+.fade-pop-leave-to {
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+}
+
+.footer-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.footer-logo {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.75);
+}
+
+.footer-text {
+  white-space: nowrap;
+}
+
+.footer-link {
+  text-decoration: none;
+}
+
+.footer-etsy-icon {
+  height: 22px;
+  width: 22px;
+  object-fit: contain;
+}
+
+.footer-bmc img {
+  height: 26px;
+  display: block;
+}
+
 
 @media (max-width: 900px) {
   .hero {
