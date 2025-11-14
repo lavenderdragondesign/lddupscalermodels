@@ -10,12 +10,43 @@ export interface UpscaleOptions {
 }
 
 const modelCache = new Map<string, tf.GraphModel>();
+interface ModelPathConfig {
+  path: string;
+}
+
+// Map friendly engine keys from the UI to actual TFJS model folders
+// backed by the UpscalerJS model collection we copied into /public/models.
+const MODEL_PATHS: Record<string, ModelPathConfig> = {
+  // LDD Crystal (RealESRGAN-style photo engines)
+  "realesrgan/general_fast-64":        { path: "div2k/017-4x" }, // fast 4×
+  "realesrgan/general_plus-64":        { path: "div2k/017-4x" }, // high quality 4×
+
+  // Extra sharp / denoise variants mapped to PSNR / IDEALO style models
+  "realesrgan/x4plus-64":              { path: "psnr-small-quant-uint8" },
+  "realesrgan/x4plus_anime-64":        { path: "idealo/gans" },
+
+  // 'WDN' + 'anime_video' mapped to div2k variants
+  "realesrgan/general_wdn-64":         { path: "div2k/005-2x" },
+  "realesrgan/anime_video-64":         { path: "div2k/019-3x" },
+
+  // RealCUGAN-style keys mapped to a mix of 2× / 3× / 4× models
+  "realcugan/2x-conservative-64":      { path: "div2k/005-2x" },
+  "realcugan/3x-conservative-64":      { path: "div2k/019-3x" },
+  "realcugan/4x-conservative-64":      { path: "div2k/017-4x" },
+};
+
+function resolveModelFolder(modelKey: string): string {
+  const cfg = MODEL_PATHS[modelKey];
+  return cfg ? cfg.path : modelKey;
+}
+
 
 async function loadModel(modelKey: string): Promise<tf.GraphModel> {
   if (modelCache.has(modelKey)) {
     return modelCache.get(modelKey)!;
   }
-  const url = `/models/${modelKey}/model.json`;
+  const folder = resolveModelFolder(modelKey);
+  const url = `/models/${folder}/model.json`;
   const model = await tf.loadGraphModel(url);
   modelCache.set(modelKey, model);
   return model;

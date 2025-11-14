@@ -1,0 +1,17 @@
+version = 1
+
+test_patterns = ["packages/upscalerjs/src/**/*.ts"]
+
+exclude_patterns = ["packages/upscalerjs/src/**/*.test.ts", "examples/**", "scripts/**", "packages/upscalerjs/jest.setup.ts", "test/**", "packages/test-scaffolding/**"]
+
+[[analyzers]]
+name = "javascript"
+enabled = true
+
+  [analyzers.meta]
+  environment = [
+    "browser",
+    "nodejs",
+    "jest"
+  ]
+  dialect = "typescript"

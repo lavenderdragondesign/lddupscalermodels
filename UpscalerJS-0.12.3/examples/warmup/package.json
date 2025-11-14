@@ -1,0 +1,31 @@
+{
+  "name": "warmup",
+  "version": "0.12.3",
+  "description": "Demonstration of warming up UpscalerJS",
+  "main": "index.js",
+  "scripts": {
+    "start": "cross-env NODE_ENV=development parcel index.html --no-hmr --open"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.2",
+    "parcel": "2.4.1"
+  },
+  "author": "Kevin Scott",
+  "license": "MIT",
+  "dependencies": {
+    "@tensorflow/tfjs": "^3.13.0",
+    "upscaler": "0.12.3"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
