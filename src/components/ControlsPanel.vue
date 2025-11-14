@@ -27,27 +27,6 @@
     </div>
 
     <div class="progress-row">
-      <div v-if="devMode" class="engine-core-toggle">
-        <button
-          type="button"
-          class="core-pill"
-          :class="{ 'core-pill--active': engineCore === 'tfjs' }"
-          @click="$emit('update:engineCore', 'tfjs')"
-          :disabled="busy"
-        >
-          TFJS
-        </button>
-        <button
-          type="button"
-          class="core-pill"
-          :class="{ 'core-pill--active': engineCore === 'onnx' }"
-          @click="$emit('update:engineCore', 'onnx')"
-          :disabled="busy"
-        >
-          ONNX (beta)
-        </button>
-      </div>
-
       <button class="btn" type="button" @click="$emit('upscale')" :disabled="busy">
         <span v-if="busy">Upscaling…</span>
         <span v-else>Upscale image</span>
@@ -75,13 +54,10 @@ const props = defineProps<{
   busy: boolean;
   progress: number;
   etaText: string | null;
-  engineCore: "tfjs" | "onnx";
-  devMode: boolean;
 }>();
 
 defineEmits<{
   "update:modelKey": [string];
-  "update:engineCore": ["tfjs" | "onnx"];
   upscale: [];
 }>();
 
@@ -134,38 +110,8 @@ const tfjsEngines = [
   }
 ];
 
-const onnxEngines = [
-  {
-    key: "onnx/crystal-linework-x4",
-    name: "Crystal Linework",
-    family: "Line Art / Stickers",
-    tagline: "Ultra-clean line art · 4×",
-    description: "Best for line art, anime, stickers, and any design where you want razor sharp ink lines and crisp edges."
-  },
-  {
-    key: "onnx/nebula-hd-x4",
-    name: "Nebula HD",
-    family: "Photos / POD",
-    tagline: "General art & photos · 4×",
-    description: "All-purpose upscale for POD previews, mockups, and product photos where you want strong detail and clarity."
-  },
-  {
-    key: "onnx/diamond-clarity-x4",
-    name: "Diamond Clarity",
-    family: "Art Scans / Texture",
-    tagline: "Restores scans & textures · 4×",
-    description: "Ideal for scanned artwork, textured illustrations, and noisy designs that need cleanup without losing character."
-  },
-  {
-    key: "onnx/ember-studio-x2",
-    name: "Ember Studio 2×",
-    family: "Soft Art / Illustrations",
-    tagline: "Premium gentle upscale · 2×",
-    description: "Perfect for watercolor, soft illustrations, and designs where you want a tasteful 2× upscale without over-sharpening."
-  }
-];
 
-const engines = computed(() => (props.engineCore === "onnx" ? onnxEngines : tfjsEngines));
+const engines = computed(() => tfjsEngines);
 
 </script>
 

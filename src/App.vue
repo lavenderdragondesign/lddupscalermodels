@@ -31,7 +31,7 @@
 
           <template v-else>
             <div class="dev-title">Dev mode enabled</div>
-            <p class="dev-hint">Advanced options like ONNX core are visible.</p>
+            <p class="dev-hint">Advanced options are available.</p>
             <button type="button" class="dev-btn dev-btn--ghost" @click="handleDevLogout">
               Disable dev mode
             </button>
@@ -87,10 +87,7 @@
             :busy="busy"
             :progress="progress"
             :etaText="etaText"
-            :engineCore="engineCore"
-            :devMode="devMode"
             @update:modelKey="val => (modelKey = val)"
-            @update:engineCore="val => (engineCore = val)"
             @upscale="handleUpscale"
           />
         </section>
@@ -143,7 +140,6 @@ import ImageDropzone from "./components/ImageDropzone.vue";
 import ControlsPanel from "./components/ControlsPanel.vue";
 import PreviewPane from "./components/PreviewPane.vue";
 import { upscaleImage } from "./utils/upscaler";
-import { upscaleImageOnnx } from "./utils/upscaler-onnx";
 
 const logoURL = "https://i.postimg.cc/y6M6KPZ5/logo.jpg";
 const bmcImageURL = "https://i.postimg.cc/28YhHbfZ/bmc-button.png";
@@ -153,41 +149,16 @@ const etsyIconURL = "https://img.icons8.com/?size=100&id=MQ-HLKLCGrJn&format=png
 
 const loading = ref(true);
 const modelKey = ref("realesrgan/anime_plus-64");
-const engineCore = ref<"tfjs" | "onnx">("tfjs");
 
-const devMode = ref(true); // Dev features always enabled for this build
+const devMode = ref(false);
 const showDevPrompt = ref(false);
 const devPassword = ref("");
 const devError = ref("");
 
-const DEV_PASSWORD = "ldd-dragon-999";
-const DEV_KEY = "ldd-dev-mode";
-
 
 const file = ref<File | null>(null);
-
-function handleDevLogin() {
-  if (devPassword.value === DEV_PASSWORD) {
-    devMode.value = true;
-    localStorage.setItem(DEV_KEY, "1");
-    devPassword.value = "";
-    devError.value = "";
-    showDevPrompt.value = false;
-  } else {
-    devError.value = "Incorrect dev password.";
-  }
-}
-
-function handleDevLogout() {
-  devMode.value = false;
-  localStorage.removeItem(DEV_KEY);
-  devPassword.value = "";
-  devError.value = "";
-}
-
 const inputUrl = ref<string | null>(null);
 const outputUrl = ref<string | null>(null);
-
 
 const busy = ref(false);
 const progress = ref(0);
@@ -217,22 +188,20 @@ onMounted(() => {
   }, 6000);
 });
 
-function onFileChange(newFile: File | null) {
-  file.value = newFile;
-  outputUrl.value = null;
-
-  if (newFile) {
-    inputUrl.value = URL.createObjectURL(newFile);
-  } else {
-    inputUrl.value = null;
+function handleFileSelected(payload: { file: File; url: string }) {
+  if (file.value) {
+    URL.revokeObjectURL(file.value as any);
   }
-}
+  if (inputUrl.value) {
+    URL.revokeObjectURL(inputUrl.value);
+  }
 
-function triggerDownloadPopup() {
-  showDownloadPopup.value = true;
-  // auto-hide disabled
+  file.value = payload.file;
+  inputUrl.value = payload.url;
+  outputUrl.value = null;
+  progress.value = 0;
+  etaText.value = null;
 }
-
 
 function handleDownloadAndReset() {
   if (!outputUrl.value) return;
@@ -240,11 +209,14 @@ function handleDownloadAndReset() {
   const a = document.createElement("a");
   a.href = outputUrl.value;
   a.download = "ldd-upscaled.png";
-  document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
 
+  // hide popup
   showDownloadPopup.value = false;
+  if (downloadPopupTimeout != null) {
+    window.clearTimeout(downloadPopupTimeout);
+    downloadPopupTimeout = null;
+  }
 
   // reset state so user can start fresh
   file.value = null;
@@ -269,9 +241,7 @@ async function handleUpscale() {
   startTime.value = performance.now();
 
   try {
-    const upscaler = engineCore.value === "onnx" ? upscaleImageOnnx : upscaleImage;
-
-    const blob = await upscaler({
+    const blob = await upscaleImage({
       file: file.value,
       modelKey: modelKey.value,
       scale: 4,
@@ -282,7 +252,7 @@ async function handleUpscale() {
         if (startTime.value != null && p > 0 && p < 100) {
           const elapsedSec = (performance.now() - startTime.value) / 1000;
           if (elapsedSec > 0) {
-            const rate = p / elapsedSec; // percent per second
+            const rate = p / elapsedSec;
             if (rate > 0.01) {
               const remainingSec = (100 - p) / rate;
               const clamped = Math.max(1, Math.min(remainingSec, 60 * 30));
@@ -296,7 +266,7 @@ async function handleUpscale() {
             }
           }
         }
-      }
+      },
     });
 
     if (outputUrl.value) {
@@ -306,8 +276,15 @@ async function handleUpscale() {
     const url = URL.createObjectURL(blob);
     outputUrl.value = url;
 
-    // Auto-download PNG
+    // Auto-show download popup, auto-hide after 18s if user ignores it
     showDownloadPopup.value = true;
+    if (downloadPopupTimeout != null) {
+      window.clearTimeout(downloadPopupTimeout);
+    }
+    downloadPopupTimeout = window.setTimeout(() => {
+      showDownloadPopup.value = false;
+      downloadPopupTimeout = null;
+    }, 18000);
   } catch (err) {
     console.error(err);
     alert("Upscale failed. Check console for details.");
@@ -317,20 +294,15 @@ async function handleUpscale() {
     etaText.value = null;
     startTime.value = null;
   }
-}</script>
+}
+</script>
 
 <style scoped>
 
 .dev-mode-shell {
-  position: absolute;
-  top: 12px;
-  right: 16px;
-  z-index: 40;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
+  display: none;
 }
+
 
 .dev-chip {
   padding: 4px 10px;

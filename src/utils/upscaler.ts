@@ -1,3 +1,4 @@
+import { antialias, reflectionPad, replicationPad, createSeamBlendMask, blendPatchWithMask, ttaSplit, ttaMerge, alphaBorderPadding } from "./tfjs-utils";
 import * as tf from "@tensorflow/tfjs";
 
 export interface UpscaleOptions {
