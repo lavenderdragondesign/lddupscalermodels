@@ -48,7 +48,7 @@ async function fileToImageData(file: File): Promise<ImageData> {
   const canvas = document.createElement("canvas");
   canvas.width = img.naturalWidth || img.width;
   canvas.height = img.naturalHeight || img.height;
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d", { willReadFrequently: true } as any);
   if (!ctx) {
     throw new Error("2D context not available");
   }
@@ -151,7 +151,7 @@ export async function upscaleImageOnnx(opts: UpscaleOptionsOnnx): Promise<Blob> 
     const canvas = document.createElement("canvas");
     canvas.width = sw;
     canvas.height = sh;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true } as any);
     if (!ctx) throw new Error("2D context not available");
 
     // Put the whole source once, then slice from it.
@@ -164,7 +164,7 @@ export async function upscaleImageOnnx(opts: UpscaleOptionsOnnx): Promise<Blob> 
   const srcCanvas = document.createElement("canvas");
   srcCanvas.width = srcW;
   srcCanvas.height = srcH;
-  const srcCtx = srcCanvas.getContext("2d");
+  const srcCtx = srcCanvas.getContext("2d", { willReadFrequently: true } as any);
   if (!srcCtx) throw new Error("2D context not available");
   srcCtx.putImageData(src, 0, 0);
 
@@ -187,7 +187,7 @@ export async function upscaleImageOnnx(opts: UpscaleOptionsOnnx): Promise<Blob> 
   const outCanvas = document.createElement("canvas");
   outCanvas.width = outW;
   outCanvas.height = outH;
-  const outCtx = outCanvas.getContext("2d");
+  const outCtx = outCanvas.getContext("2d", { willReadFrequently: true } as any);
   if (!outCtx) throw new Error("2D context not available");
   outCtx.clearRect(0, 0, outW, outH);
 
@@ -218,7 +218,7 @@ export async function upscaleImageOnnx(opts: UpscaleOptionsOnnx): Promise<Blob> 
       const patchCanvas = document.createElement("canvas");
       patchCanvas.width = outPatch.width;
       patchCanvas.height = outPatch.height;
-      const pctx = patchCanvas.getContext("2d");
+      const pctx = patchCanvas.getContext("2d", { willReadFrequently: true } as any);
       if (!pctx) throw new Error("2D context not available");
       pctx.putImageData(outPatch.image, 0, 0);
 
