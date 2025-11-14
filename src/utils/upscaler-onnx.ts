@@ -140,11 +140,22 @@ export async function upscaleImageOnnx(opts: UpscaleOptionsOnnx): Promise<Blob> 
   const srcW = src.width;
   const srcH = src.height;
 
+
+const totalPixels = srcW * srcH;
+const MAX_PIXELS = 4096 * 4096; // ~16M pixels safety cap for browser WASM
+
+if (totalPixels > MAX_PIXELS) {
+  throw new Error(
+    `Image too large for ONNX engine in browser (${srcW}×${srcH}). ` +
+    "Please use a smaller image, lower resolution, or switch to the standard engine."
+  );
+}
+
   const session = await loadSession(modelKey);
 
   // Reasonable patch size for browser WASM; you can tweak these.
-  const TILE = 192;
-  const OVERLAP = 24;
+  const TILE = 128;
+  const OVERLAP = 16;
 
   // Helper to extract a patch from the source ImageData.
   function extractPatch(sx: number, sy: number, sw: number, sh: number): ImageData {

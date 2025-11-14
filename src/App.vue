@@ -155,7 +155,7 @@ const loading = ref(true);
 const modelKey = ref("realesrgan/anime_plus-64");
 const engineCore = ref<"tfjs" | "onnx">("tfjs");
 
-const devMode = ref(false);
+const devMode = ref(true); // Dev features always enabled for this build
 const showDevPrompt = ref(false);
 const devPassword = ref("");
 const devError = ref("");
