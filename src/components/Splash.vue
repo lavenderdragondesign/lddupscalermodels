@@ -1,14 +1,7 @@
-<script setup lang="ts">
-const logoURL = "https://i.postimg.cc/y6M6KPZ5/logo.jpg";
-</script>
-
 <template>
   <div class="splash">
     <div class="glow-orb"></div>
     <div class="card">
-      <div class="logo-row">
-        <img :src="logoURL" alt="LavenderDragonDesign logo" class="logo" />
-      </div>
       <div class="badge">LavenderDragonDesign · Upscaler</div>
       <div class="title">Warming up your engines…</div>
       <div class="subtitle">
@@ -68,19 +61,6 @@ const logoURL = "https://i.postimg.cc/y6M6KPZ5/logo.jpg";
   border: 1px solid rgba(129, 140, 248, 0.6);
   backdrop-filter: blur(24px);
 }
-.logo-row {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 6px;
-}
-
-.logo {
-  width: 44px;
-  height: 44px;
-  border-radius: 999px;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.85);
-}
-
 
 .badge {
   display: inline-flex;
